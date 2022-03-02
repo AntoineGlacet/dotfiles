@@ -27,7 +27,7 @@ function fish_prompt
   set -l repository_color (set_color $fish_color_cwd 2> /dev/null; or set_color green)
 
   # test
-  echo -n -s $USER "@" $hostname $normal_color
+  echo -n -s $repository_color "$USER"@"$hostname" $normal_color
 
 
 
