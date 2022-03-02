@@ -128,17 +128,21 @@ if [[ $# -gt 0 ]]; then
             fi
 
             # Symbolic links for files of oh-my-fish
-            rm "$HOME/.config/omf/init.fish"
-            make_link "$DOTFILES/oh-my-fish/init.fish" "$HOME/.config/omf/init.fish"
-            rm "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
+            mv "$HOME/.config/omf/init.fish" "$DOTFILES/backup"
+            make_link "$DOTFILES/shell/init.fish" "$HOME/.config/omf/init.fish"
+            mv "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish" "$DOTFILES/backup"
             make_link "$DOTFILES/oh-my-fish/fish_prompt.fish" "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
+
+            # Symbolic link for shell folder
+            make_link "$DOTFILES/shell" "$HOME/.shell"
+            make_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
 
             # git, vscode, others
 
-            # # change default shell if needed
-            # if ! echo $SHELL | grep -q fish  ; then
-            #     chsh -s /user/bin/fish
-            # fi
+            # change default shell if needed
+            if ! echo $SHELL | grep -q fish  ; then
+                chsh -s /user/bin/fish $USER
+            fi       
 
             # reload omf
             /usr/bin/fish
@@ -147,6 +151,7 @@ if [[ $# -gt 0 ]]; then
 
 
             info "Install complete"
+            msg "${GREEN}restart your shell now${COLOR_OFF}";
             exit 0
             ;;
         uninstall|u)
@@ -160,7 +165,7 @@ if [[ $# -gt 0 ]]; then
             # uninstall installed stuff
 
             # Symbolic links for files of oh-my-fish
-            make_link "$DOTFILES/oh-my-fish/init.fish" "~/.config/omf/init.fish"
+            unmake_link "$DOTFILES/shell/init.fish" "~/.config/omf/init.fish"
             unmake_link "$DOTFILES/oh-my-fish/fish_prompt.fish" "~/.local/share/omf/themes/default/functions/fish_prompt.fish"
 
             # git, vscode, others
