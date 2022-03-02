@@ -95,6 +95,11 @@ function unmake_link {
 
 
 ########## Script
+usage () {
+    echo "dotfiles install script"
+    echo ""
+    echo "Usage : dotfiles (install|uninstall)"
+}
 
 if [[ $# -gt 0 ]]; then
     case $1 in
@@ -108,13 +113,19 @@ if [[ $# -gt 0 ]]; then
 
             # Install or update required programs (fish and oh-my-fish)
             # fish
-            sudo apt-add-repository ppa:fish-shell/release-3
-            sudo apt update
-            sudo apt install fish
+            if ! grep -q fish /etc/shells ; then # test if fish is a shell
+                msg "${RED}fish not installed,${GREEN}installing...${COLOR_OFF}";
+                sudo apt-add-repository --yes ppa:fish-shell/release-3
+                sudo apt --yes update
+                sudo apt --yes install fish
+            fi
 
             # oh-my-fish standard install
-            curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
-
+            if ! [ -e "$HOME/.local/share/omf" ]  ; then # test for an oh-my-fish config folder
+                msg "${RED}oh-my-fish not installed,${GREEN}installing...${COLOR_OFF}";
+                curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install > install
+                fish install --noninteractive --yes
+            fi
 
             # Symbolic links for files of oh-my-fish
             rm "$HOME/.config/omf/init.fish"
@@ -123,6 +134,16 @@ if [[ $# -gt 0 ]]; then
             make_link "$DOTFILES/oh-my-fish/fish_prompt.fish" "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
 
             # git, vscode, others
+
+            # # change default shell if needed
+            # if ! echo $SHELL | grep -q fish  ; then
+            #     chsh -s /user/bin/fish
+            # fi
+
+            # reload omf
+            /usr/bin/fish
+            omf reload
+            bash
 
 
             info "Install complete"
