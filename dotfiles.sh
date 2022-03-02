@@ -107,6 +107,14 @@ if [[ $# -gt 0 ]]; then
             need_cmd 'ln'
 
             # Install or update required programs (fish and oh-my-fish)
+            # fish
+            sudo apt-add-repository ppa:fish-shell/release-3
+            sudo apt update
+            sudo apt install fish
+
+            # oh-my-fish standard install
+            curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install | fish
+
 
             # Symbolic links for files of oh-my-fish
             rm "$HOME/.config/omf/init.fish"
