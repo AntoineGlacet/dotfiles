@@ -1,6 +1,8 @@
+# This file is appended to .bashrc
+# only at when installing!!!
+# MODIFICATIONS REQUIRE REEXECUTION OF dotfiles install !!!!!
 
 source ~/.shell/env
 source ~/.shell/env_functions
 source ~/.shell/aliases
-
-cd $HOME
+source ~/.shell/init
