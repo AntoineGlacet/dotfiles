@@ -135,7 +135,7 @@ if [[ $# -gt 0 ]]; then
 
             # Symbolic link for shell folder
             make_link "$DOTFILES/shell" "$HOME/.shell"
-            make_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
+            cat "$DOTFILES/shell/bashrc_append" >> "$HOME/.bashrc"
 
             # git, vscode, others
 
@@ -162,13 +162,7 @@ if [[ $# -gt 0 ]]; then
             need_cmd 'curl'
             need_cmd 'ln'
 
-            # uninstall installed stuff
-
-            # Symbolic links for files of oh-my-fish
-            unmake_link "$DOTFILES/shell/init.fish" "~/.config/omf/init.fish"
-            unmake_link "$DOTFILES/oh-my-fish/fish_prompt.fish" "~/.local/share/omf/themes/default/functions/fish_prompt.fish"
-
-            # git, vscode, others
+            # To be done
 
 
             info "Uninstall complete"
