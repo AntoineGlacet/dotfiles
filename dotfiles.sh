@@ -109,7 +109,10 @@ if [[ $# -gt 0 ]]; then
             # Install or update required programs (fish and oh-my-fish)
 
             # Symbolic links for files of oh-my-fish
-            make_link "$DOTFILES/oh-my-fish/init.fish" "$OH_MY_FISH/init.fish"
+            rm "$HOME/.config/omf/init.fish"
+            make_link "$DOTFILES/oh-my-fish/init.fish" "$HOME/.config/omf/init.fish"
+            rm "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
+            make_link "$DOTFILES/oh-my-fish/fish_prompt.fish" "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
 
             # git, vscode, others
 
@@ -128,7 +131,8 @@ if [[ $# -gt 0 ]]; then
             # uninstall installed stuff
 
             # Symbolic links for files of oh-my-fish
-            unmake_link "$DOTFILES/oh-my-fish/init.fish" "$OH_MY_FISH/init.fish"
+            make_link "$DOTFILES/oh-my-fish/init.fish" "~/.config/omf/init.fish"
+            unmake_link "$DOTFILES/oh-my-fish/fish_prompt.fish" "~/.local/share/omf/themes/default/functions/fish_prompt.fish"
 
             # git, vscode, others
 
