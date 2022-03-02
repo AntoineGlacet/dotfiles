@@ -6,5 +6,7 @@ Script dotfiles can install and uninstall dotfiles
 
 to do:
 
-[ ] install oh-my-fish script
-[ ] preserve old files in backup and restore with uninstall
+[x] install oh-my-fish script
+[x] preserve old files in backup and restore with uninstall
+[ ] test on new install
+[ ] cleanup and use on main machine

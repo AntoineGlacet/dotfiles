@@ -9,6 +9,7 @@
 
 # dotfiles folder
 DOTFILES="$HOME/dotfiles"
+BACKUP="$DOTFILES/backup"
 
 # ohmyzsh config folder
 OH_MY_FISH="$HOME/.config/omf"
@@ -91,6 +92,15 @@ function unmake_link {
         fi
     fi
 }
+
+# move to backup with timestamp
+# $1 = target
+function backup {
+    local target=$1
+    basename=$(basename $target)
+    mv $target "$BACKUP/`date +%y%m%d_%H%M%S`.$basename"
+}
+
 ##########
 
 
@@ -125,23 +135,27 @@ if [[ $# -gt 0 ]]; then
                 msg "${RED}oh-my-fish not installed,${GREEN}installing...${COLOR_OFF}";
                 curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install > install
                 fish install --noninteractive --yes
+                rm install
             fi
-
-            # Symbolic links for files of oh-my-fish
-            mv "$HOME/.config/omf/init.fish" "$DOTFILES/backup"
-            make_link "$DOTFILES/shell/init.fish" "$HOME/.config/omf/init.fish"
-            mv "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish" "$DOTFILES/backup"
-            make_link "$DOTFILES/oh-my-fish/fish_prompt.fish" "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
 
             # Symbolic link for shell folder
             make_link "$DOTFILES/shell" "$HOME/.shell"
-            cat "$DOTFILES/shell/bashrc_append" >> "$HOME/.bashrc"
+
+            # Symbolic links for files of oh-my-fish
+            backup "$HOME/.config/omf/init.fish"
+            make_link "$DOTFILES/shell/init.fish" "$HOME/.config/omf/init.fish"
+            backup "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
+            make_link "$DOTFILES/oh-my-fish/fish_prompt.fish" "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
+
+            # Symbolic links for bashrc
+            backup "$HOME/.bashrc"
+            make_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
 
             # git, vscode, others
 
             # change default shell if needed
             if ! echo $SHELL | grep -q fish  ; then
-                chsh -s /user/bin/fish $USER
+                chsh -s /usr/bin/fish $USER
             fi       
 
             # reload omf

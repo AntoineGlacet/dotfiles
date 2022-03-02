@@ -1,0 +1,8 @@
+# set and unset office proxy
+function setproxy
+    export {http,https,ftp}_proxy="http://192.168.3.16:8080"
+end
+
+function unsetproxy
+    unset {http,https,ftp}_proxy
+end
