@@ -159,10 +159,8 @@ if [[ $# -gt 0 ]]; then
             fi       
 
             # reload omf
-            /usr/bin/fish
-            omf reload
-            bash
-
+            exec fish < omf reload 
+            cd $DOTFILES
 
             info "Install complete"
             msg "${GREEN}restart your shell now${COLOR_OFF}";
