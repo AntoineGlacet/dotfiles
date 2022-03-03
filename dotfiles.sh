@@ -98,7 +98,8 @@ function unmake_link {
 function backup {
     local target=$1
     basename=$(basename $target)
-    mv $target "$BACKUP/`date +%y%m%d_%H%M%S`.$basename"
+    cp -L $target "$BACKUP/`date +%y%m%d_%H%M%S`.$basename"
+    rm  $target
 }
 
 ##########
