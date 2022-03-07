@@ -1,5 +1,4 @@
 . ~/.shell/env_functions
-cd
 
 # Path settings
 pathprepend "${HOME}/bin" PATH
@@ -19,5 +18,11 @@ export EMAIL="antoine.glacet@gmail.com"
 
 # Ruby
 export GEM_HOME="$HOME/gems"
+<<<<<<< HEAD
 pathprepend "$HOME/gems/bin"
 
+=======
+export PATH="$HOME/gems/bin:$PATH"
+
+PATH="$HOME/.local/bin:$PATH"
+>>>>>>> f663f7781e919c22153c21180243a39d24002fec
