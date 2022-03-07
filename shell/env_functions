@@ -1,0 +1,78 @@
+# Usage: indirect_expand PATH -> $PATH
+indirect_expand () {
+	env | sed -n "s/^$1=//p"
+}
+
+# Usage: pathremove /path/to/bin [PATH]
+# Eg, to remove ~/bin from $PATH
+#     pathremove ~/bin PATH
+pathremove () {
+	local IFS=':'
+	local newpath
+	local dir
+	local var=${2:-PATH}
+	for dir in $(indirect_expand "$var"); do
+		IFS=''
+		if [ "$dir" != "$1" ]; then
+			newpath=$newpath:$dir
+		fi
+	done
+	eval "$var=\${newpath#:}"
+	export "$var"
+}
+
+# Usage: pathprepend /path/to/bin [PATH]
+# Eg, to prepend ~/bin to $PATH
+#     pathprepend ~/bin PATH
+pathprepend () {
+	# if the path is already in the variable,
+	# remove it so we can move it to the front
+	pathremove "${1}" "${2}"
+	local var="${2:-PATH}"
+	local value
+	value=$(indirect_expand "$var")
+	eval "$var=\${1}\${value:+:${value}}"
+	export "$var"
+}
+
+# Usage: pathappend /path/to/bin [PATH]
+# Eg, to append ~/bin to $PATH
+#     pathappend ~/bin PATH
+pathappend () {
+	pathremove "${1}" "${2}"
+	local var=${2:-PATH}
+	local value
+	value=$(indirect_expand "$var")
+	eval "$var=\${value:+${value}:}\${1}"
+	export "$var"
+}
+
+# Usage: ssource filename
+ssource () {
+	[[ -r "$1" ]] && . "$1"
+}
+
+# List all tmux panes.
+# Output is
+# <session_name>#<window_index>.<pane_index> <window_name>
+#   <pstree of pane>
+tmuxls () {
+	while read -r pane
+	do
+		IFS="|" read PANE_ID PANE_INDEX WINDOW_INDEX SESSION_NAME WINDOW_NAME <<< "$pane"
+		echo "${SESSION_NAME}#${WINDOW_INDEX}.${PANE_INDEX} ${WINDOW_NAME}"
+		pstree -p -a -U "$PANE_ID" | sed 's/^/  /'
+		echo "-----"
+	done <<< $(tmux list-panes -a -F "#{pane_pid}|#{pane_index}|#{window_index}|#{session_name}|#{window_name}")
+}
+
+# set and unset office proxy
+function setproxy() {
+    export {http,https,ftp}_proxy="http://192.168.3.16:8080"
+}
+
+function unsetproxy() {
+    unset {http,https,ftp}_proxy
+}
+
+
