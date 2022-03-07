@@ -17,6 +17,7 @@ export NAME="Your Name"
 export EMAIL="your.email@example.com"
 
 # Ruby
+# Install Ruby Gems to ~/gems
 export GEM_HOME="$HOME/gems"
 pathprepend "$HOME/gems/bin"
 
