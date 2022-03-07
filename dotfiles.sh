@@ -11,8 +11,8 @@
 DOTFILES="$HOME/dotfiles"
 BACKUP="$DOTFILES/backup"
 
-# ohmyzsh config folder
-OH_MY_FISH="$HOME/.config/omf"
+# ohmyzsh install folder
+OH_MY_ZSH="$HOME/.oh-my-zsh"
 
 ##########
 
@@ -28,7 +28,7 @@ need_cmd() {
     success "$1 check"
 }
 
-# Display
+### Display
 COLOR_OFF='\033[0m' # Text Reset
 RED='\033[0;31m'
 BLUE='\033[0;34m'
@@ -122,49 +122,34 @@ if [[ $# -gt 0 ]]; then
             need_cmd 'curl'
             need_cmd 'ln'
 
-            # Install or update required programs (fish and oh-my-fish)
-            # fish
-            if ! grep -q fish /etc/shells ; then # test if fish is a shell
+            # Install or update required programs (zsh, oh-my-zsh & plugins)
+            # zsh
+            if ! grep -q zsh /etc/shells ; then # test if fish is a shell
                 msg "${RED}fish not installed,${GREEN}installing...${COLOR_OFF}";
-                sudo apt-add-repository --yes ppa:fish-shell/release-3
                 sudo apt --yes update
-                sudo apt --yes install fish
+                sudo apt --yes install zsh
             fi
 
-            # oh-my-fish standard install
-            if ! [ -e "$HOME/.local/share/omf" ]  ; then # test for an oh-my-fish config folder
-                msg "${RED}oh-my-fish not installed,${GREEN}installing...${COLOR_OFF}";
-                curl https://raw.githubusercontent.com/oh-my-fish/oh-my-fish/master/bin/install > install
-                fish install --noninteractive --yes
-                rm install
-            fi
+            # Install oh-my-zsh
+            fetch_repo "git://github.com/ohmyzsh/ohmyzsh.git" "$OH_MY_ZSH"
+            # Install powerlevel10k for zsh
+            fetch_repo https://github.com/romkatv/powerlevel10k.git "$OH_MY_ZSH/custom/themes/powerlevel10k"
+            # Install zsh-syntax-highlighting
+            fetch_repo https://github.com/zsh-users/zsh-syntax-highlighting.git "$OH_MY_ZSH/custom/plugins/zsh-syntax-highlighting"
+            # Install zsh-autosuggestions
+            fetch_repo https://github.com/zsh-users/zsh-autosuggestions "$OH_MY_ZSH/custom/plugins/zsh-autosuggestions"
+            make_link "$DOTFILES/oh-my-zsh/custom/zsh-autosuggestions.zsh" "$OH_MY_ZSH/custom/zsh-autosuggestions.zsh"
 
             # Symbolic link for shell folder
             make_link "$DOTFILES/shell" "$HOME/.shell"
 
-            # Symbolic links for files of oh-my-fish
-            backup "$HOME/.config/omf/init.fish"
-            make_link "$DOTFILES/shell/init.fish" "$HOME/.config/omf/init.fish"
-            backup "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
-            make_link "$DOTFILES/oh-my-fish/fish_prompt.fish" "$HOME/.local/share/omf/themes/default/functions/fish_prompt.fish"
-
-            # Symbolic links for bashrc
+            # Symbolic links for files in shell folder
             backup "$HOME/.bashrc"
             make_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
-
-            # git, vscode, others
-
-            # change default shell if needed
-            if ! echo $SHELL | grep -q fish  ; then
-                chsh -s /usr/bin/fish $USER
-            fi       
-
-            # reload omf
-            exec fish < omf reload 
-            cd $DOTFILES
+            backup "$HOME/.zshrc"
+            make_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
 
             info "Install complete"
-            msg "${GREEN}restart your shell now${COLOR_OFF}";
             exit 0
             ;;
         uninstall|u)
@@ -175,8 +160,14 @@ if [[ $# -gt 0 ]]; then
             need_cmd 'curl'
             need_cmd 'ln'
 
-            # To be done
+            # We leave oh-my-zsh repo
 
+            # Symbolic link for shell folder
+            unmake_link "$DOTFILES/shell" "$HOME/.shell"
+
+            # Symbolic links for files in shell folder
+            unmake_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
+            unmake_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
 
             info "Uninstall complete"
             exit 0
@@ -193,5 +184,3 @@ if [[ $# -gt 0 ]]; then
 fi
 
 usage
-
-##########
