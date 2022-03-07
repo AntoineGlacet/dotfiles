@@ -97,9 +97,11 @@ function unmake_link {
 # $1 = target
 function backup {
     local target=$1
-    basename=$(basename $target)
-    cp -L $target "$BACKUP/`date +%y%m%d_%H%M%S`.$basename"
-    rm  $target
+    if [[ -e "$target" ]]; then
+        basename=$(basename $target)
+        cp -L $target "$BACKUP/`date +%y%m%d_%H%M%S`.$basename"
+        rm  $target
+    fi
 }
 
 ##########
@@ -125,9 +127,10 @@ if [[ $# -gt 0 ]]; then
             # Install or update required programs (zsh, oh-my-zsh & plugins)
             # zsh
             if ! grep -q zsh /etc/shells ; then # test if fish is a shell
-                msg "${RED}fish not installed,${GREEN}installing...${COLOR_OFF}";
+                info "installing zsh...";
                 sudo apt --yes update
                 sudo apt --yes install zsh
+            else success "zsh check"
             fi
 
             # Install oh-my-zsh
@@ -148,6 +151,10 @@ if [[ $# -gt 0 ]]; then
             make_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
             backup "$HOME/.zshrc"
             make_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
+
+            # git
+            backup "$HOME/.gitconfig"
+            make_link "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
 
             info "Install complete"
             exit 0
