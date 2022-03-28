@@ -133,6 +133,7 @@ if [[ $# -gt 0 ]]; then
             else success "zsh check"
             fi
 
+            # should be modified to follow recommended install method
             # Install oh-my-zsh
             fetch_repo "git://github.com/ohmyzsh/ohmyzsh.git" "$OH_MY_ZSH"
             # Install powerlevel10k for zsh
