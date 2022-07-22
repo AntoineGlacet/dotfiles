@@ -29,3 +29,4 @@ to do:
 - [x] preserve old files in backup and restore with uninstall
 - [ ] test on new install
 - [ ] cleanup and use on main machine
+- [ ] requires caskadya code
