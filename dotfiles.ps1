@@ -1,4 +1,3 @@
-#Requires -RunAsAdministrator
 
 function Confirm($title, $question) {
   $choices = "&Yes", "&No"
@@ -45,6 +44,6 @@ function Make-Symlink($target, $link) {
 
 Make-Symlink "$($env:APPDATA)\Code\User\settings.json" "$($PSScriptRoot).\windows\vscode\settings.json"
 
-Make-Symlink "$($env:LOCALAPPDATA)\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json" "$($PSScriptRoot).windows\terminal\settings.json"
+Make-Symlink "$($env:LOCALAPPDATA)\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json" "$($PSScriptRoot).\windows\terminal\settings.json"
 
-# Make-Symlink "$($env:USERPROFILE)\.wslconfig" "$($PSScriptRoot).windows\wsl\.wslconfig"
+# Make-Symlink "$($env:USERPROFILE)\.wslconfig" "$($PSScriptRoot).\windows\wsl\.wslconfig"
