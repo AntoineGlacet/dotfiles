@@ -1,0 +1,7 @@
+# mkdir, curl, symlink, refresh font cache
+curl -fLo "CaskaydiaCove Regular NF" https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/CascadiaCode/Regular/complete/Caskaydia%20Cove%20Regular%20Nerd%20Font%20Complete%20Mono.otf
+
+# curl, prompt for manual install in windows
+curl -fLo "CaskaydiaCove Regular NF Win" https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/CascadiaCode/Regular/complete/Caskaydia%20Cove%20Regular%20Nerd%20Font%20Complete%20Mono%20Windows%20Compatible.otf
+
+
