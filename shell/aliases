@@ -80,3 +80,6 @@ alias c='paste -d" " <((echo -n "   "; ncal -w | tail -1 )| fold -w 3) <(cal)'
 alias s='supervisorctl'
 ###
 
+### midnight commander ###
+alias mc='mc -X'
+
