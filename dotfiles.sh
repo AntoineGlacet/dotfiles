@@ -188,10 +188,13 @@ if [[ $# -gt 0 ]]; then
             make_link "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
 
             # mc
-            backup "$HOME/.config/mc/ini"
-            make_link "$DOTFILES/mc/ini" "$HOME/.config/mc/ini"
-            backup "$HOME/.config/mc/panels.ini"
-            make_link "$DOTFILES/mc/panels.ini" "$HOME/.config/mc/panels.ini"
+            for file in "$DOTFILES/mc/config"/*
+            do
+                fname=$(basename $file)
+                backup "$HOME/.config/mc/${fname}"
+                make_link $file "$HOME/.config/mc/${fname}"
+            done
+            
             # mc skin (edited dracula)
             mkdir -p "$HOME/.local/share/mc/skins"
             cp "$DOTFILES/mc/skins/dracula256.ini" "$HOME/.local/share/mc/skins/"

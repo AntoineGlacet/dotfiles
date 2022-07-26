@@ -1,5 +1,5 @@
 
-bindkey -e
+# bindkey -e
 # Control + backspace
 bindkey '^H' backward-kill-word
 # Control + arrows
