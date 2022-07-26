@@ -149,11 +149,18 @@ if [[ $# -gt 0 ]]; then
 
             # Install or update required programs (zsh, oh-my-zsh & plugins)
             # zsh
-            if ! grep -q zsh /etc/shells ; then # test if fish is a shell
+            if ! grep -q zsh /etc/shells ; then # test if zsh is a shell
                 info "installing zsh...";
                 sudo apt --yes update
                 sudo apt --yes install zsh
             else success "zsh check"
+            fi
+            # mc
+            if ! hash "mc" &>/dev/null; then
+                info "installing mc...";
+                sudo apt --yes update
+                sudo apt --yes install mc
+            else success "mc check"
             fi
 
             # should be modified to follow recommended install method
@@ -179,6 +186,12 @@ if [[ $# -gt 0 ]]; then
             # git
             backup "$HOME/.gitconfig"
             make_link "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
+
+            # mc
+            backup "$HOME/.config/mc/ini"
+            make_link "$DOTFILES/mc/ini" "$HOME/.config/mc/ini"
+            backup "$HOME/.config/mc/panels.ini"
+            make_link "$DOTFILES/mc/panels.ini" "$HOME/.config/mc/panels.ini"
 
             # windows
             # does not work
