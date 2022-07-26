@@ -193,6 +193,7 @@ if [[ $# -gt 0 ]]; then
             backup "$HOME/.config/mc/panels.ini"
             make_link "$DOTFILES/mc/panels.ini" "$HOME/.config/mc/panels.ini"
             # mc skin (edited dracula)
+            mkdir -p "$HOME/.local/share/mc/skins"
             cp "$DOTFILES/mc/skins/dracula256.ini" "$HOME/.local/share/mc/skins/"
 
             # windows
