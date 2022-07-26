@@ -192,6 +192,8 @@ if [[ $# -gt 0 ]]; then
             make_link "$DOTFILES/mc/ini" "$HOME/.config/mc/ini"
             backup "$HOME/.config/mc/panels.ini"
             make_link "$DOTFILES/mc/panels.ini" "$HOME/.config/mc/panels.ini"
+            # mc skin (edited dracula)
+            cp "$DOTFILES/mc/skins/dracula256.ini" "$HOME/.local/share/mc/skins/"
 
             # windows
             # does not work
