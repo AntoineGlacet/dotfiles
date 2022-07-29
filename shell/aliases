@@ -15,6 +15,12 @@ alias lq=ls
 ### tree ###
 #all files, full path, no ident, type permission, user, group, size, date, /for dir, color, level -1
 alias tre='tree -afipughDFC -L 1'
+# cool ls
+alias ex='exa -lah --icons --git'
+
+# antoine's vs code stuff
+alias kk='chown_vscode_chown'
+
 
 ### grep ###
 alias grep='grep --color=auto'
