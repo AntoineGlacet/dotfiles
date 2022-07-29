@@ -15,27 +15,27 @@ BACKUP="$DOTFILES/backup"
 OH_MY_ZSH="$HOME/.oh-my-zsh"
 
 # if running on WSL
-if [[ $(uname -a) == *"WSL"* ]];
-then
+# if [[ $(uname -a) == *"WSL"* ]];
+# then
 
-    echo "WSL detected, symlinking between windows and WSL"
-    # add cmd.exe to PATH
-    export PATH=$PATH:/mnt/c/WINDOWS/system32/
+#     echo "WSL detected, symlinking between windows and WSL"
+#     # add cmd.exe to PATH
+#     export PATH=$PATH:/mnt/c/WINDOWS/system32/
 
-    IFS='\'
-    read -ra AD <<< $(cd /mnt/c && cmd.exe /c "echo %APPDATA%")
-    read -ra LD <<< $(cd /mnt/c && cmd.exe /c "echo %LOCALAPPDATA%")
-    read -ra UP <<< $(cd /mnt/c && cmd.exe /c "echo %USERPROFILE%")
+#     IFS='\'
+#     read -ra AD <<< $(cd /mnt/c && cmd.exe /c "echo %APPDATA%")
+#     read -ra LD <<< $(cd /mnt/c && cmd.exe /c "echo %LOCALAPPDATA%")
+#     read -ra UP <<< $(cd /mnt/c && cmd.exe /c "echo %USERPROFILE%")
 
-    APPDATA="/mnt/c/${AD[1]}/${AD[2]}/${AD[3]}/${AD[4]}"
-    LOCALAPPDATA="/mnt/c/${LD[1]}/${LD[2]}/${LD[3]}/${LD[4]}"
-    USERPROFILE="/mnt/c/${UP[1]}/${UP[2]}"
+#     APPDATA="/mnt/c/${AD[1]}/${AD[2]}/${AD[3]}/${AD[4]}"
+#     LOCALAPPDATA="/mnt/c/${LD[1]}/${LD[2]}/${LD[3]}/${LD[4]}"
+#     USERPROFILE="/mnt/c/${UP[1]}/${UP[2]}"
 
-    APPDATA=${APPDATA::-1}
-    LOCALAPPDATA=${LOCALAPPDATA::-1} 
-    USERPROFILE=${USERPROFILE::-1}
+#     APPDATA=${APPDATA::-1}
+#     LOCALAPPDATA=${LOCALAPPDATA::-1} 
+#     USERPROFILE=${USERPROFILE::-1}
 
-fi
+# fi
 
 ##########
 
@@ -174,6 +174,10 @@ if [[ $# -gt 0 ]]; then
             fetch_repo https://github.com/zsh-users/zsh-autosuggestions "$OH_MY_ZSH/custom/plugins/zsh-autosuggestions"
             make_link "$DOTFILES/oh-my-zsh/custom/zsh-autosuggestions.zsh" "$OH_MY_ZSH/custom/zsh-autosuggestions.zsh"
 
+            # Install exa
+            # different for rpi and others, just wait ubuntu 22.04 LTS
+            # then, there will be packet manager
+
             # Symbolic link for shell folder
             make_link "$DOTFILES/shell" "$HOME/.shell"
 
@@ -194,17 +198,25 @@ if [[ $# -gt 0 ]]; then
                 backup "$HOME/.config/mc/${fname}"
                 make_link $file "$HOME/.config/mc/${fname}"
             done
-            
+
             # mc skin (edited dracula)
             mkdir -p "$HOME/.local/share/mc/skins"
             cp "$DOTFILES/mc/skins/dracula256.ini" "$HOME/.local/share/mc/skins/"
+
+            # scripts
+            for file in "$DOTFILES/scripts"/*
+            do
+                fname=$(basename $file)
+                backup "$HOME/.local/bin/${fname}"
+                make_link $file "$HOME/.local/bin/${fname}"
+            done
 
             # windows
             # does not work
             # if [[ $(uname -a) == *"WSL"* ]];
             # then
-            #     backup "$APPDATA/Code/User/settings.json"
-            #     make_link "$DOTFILES/windows/vscode/settings.json" "$APPDATA/Code/User/settings.json"
+                # windows terminal
+                # vscode is just auto sync
             # fi
 
             info "Install complete"
