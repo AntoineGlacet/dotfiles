@@ -4,6 +4,10 @@ Repo with my dotfiles configurations
 
 Script dotfiles can install and uninstall dotfiles
 
+## Pre-requisite
+
+CaskaydiaCode NF
+
 ```
 dotfiles
 ├── README.md
