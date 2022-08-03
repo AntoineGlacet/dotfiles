@@ -220,7 +220,7 @@ if [[ $# -gt 0 ]]; then
         # Install or update required programs (zsh, oh-my-zsh & plugins)
         # should be modified to follow recommended install method
         # Install oh-my-zsh
-        fetch_repo "git://github.com/ohmyzsh/ohmyzsh.git" "$OH_MY_ZSH"
+        fetch_repo https://github.com/ohmyzsh/ohmyzsh.git "$OH_MY_ZSH"
         # Install powerlevel10k for zsh
         fetch_repo https://github.com/romkatv/powerlevel10k.git "$OH_MY_ZSH/custom/themes/powerlevel10k"
         # Install zsh-syntax-highlighting
