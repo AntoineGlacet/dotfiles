@@ -20,4 +20,3 @@ export EMAIL="antoine.glacet@gmail.com"
 # Install Ruby Gems to ~/gems
 export GEM_HOME="$HOME/gems"
 pathprepend "$HOME/gems/bin"
-
