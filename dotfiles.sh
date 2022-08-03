@@ -213,7 +213,7 @@ if [[ $# -gt 0 ]]; then
                     warn 'Ubuntu < 22.04 please install exa manually'
                 fi
             else
-                success "mc check"
+                success "exa check"
             fi
         fi
 
@@ -240,13 +240,14 @@ if [[ $# -gt 0 ]]; then
 
         # Symbolic links for p10k.zsh
         backup "$HOME/.p10k.zsh"
-        make_link "$DOTFILES/oh-my-zsh/.p10k.zsh"
+        make_link "$DOTFILES/oh-my-zsh/.p10k.zsh" "$HOME/.p10k.zsh"
 
         # git
         backup "$HOME/.gitconfig"
         make_link "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
 
         # mc
+        mkdir -p "$HOME/.config/mc"
         for file in "$DOTFILES/mc/config"/*; do
             fname=$(basename "$file")
             backup "$HOME/.config/mc/${fname}"
@@ -258,6 +259,7 @@ if [[ $# -gt 0 ]]; then
         cp "$DOTFILES/mc/skins/dracula256.ini" "$HOME/.local/share/mc/skins/"
 
         # scripts
+        mkdir -p "$HOME/.local/bin"
         for file in "$DOTFILES/scripts"/*; do
             fname=$(basename "$file")
             backup "$HOME/.local/bin/${fname}"
