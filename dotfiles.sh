@@ -64,6 +64,42 @@ error() {
     exit 1
 }
 
+function get_os {
+    if [ -f /etc/os-release ]; then
+        # freedesktop.org and systemd
+        # shellcheck source=/dev/null
+        . /etc/os-release
+        OS=$NAME
+        VER=$VERSION_ID
+    elif type lsb_release >/dev/null 2>&1; then
+        # linuxbase.org
+        OS=$(lsb_release -si)
+        VER=$(lsb_release -sr)
+    elif [ -f /etc/lsb-release ]; then
+        # For some versions of Debian/Ubuntu without lsb_release command
+        # shellcheck source=/dev/null
+        . /etc/lsb-release
+        OS=$DISTRIB_ID
+        VER=$DISTRIB_RELEASE
+    elif [ -f /etc/debian_version ]; then
+        # Older Debian/Ubuntu/etc.
+        OS=Debian
+        VER=$(cat /etc/debian_version)
+    # elif [ -f /etc/SuSe-release ]; then
+    #     # Older SuSE/etc.
+    #     ...
+    # elif [ -f /etc/redhat-release ]; then
+    #     # Older Red Hat, CentOS, etc.
+    #     ...
+    else
+        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+        OS=$(uname -s)
+        VER=$(uname -r)
+    fi
+
+    echo "$OS" "$VER"
+}
+
 # Clones or updates a git repository
 # $1 = repository
 # $2 = directory absolute path
@@ -150,27 +186,41 @@ if [[ $# -gt 0 ]]; then
         need_cmd 'curl'
         need_cmd 'ln'
 
-        # Install or update required programs (zsh, oh-my-zsh & plugins)
-        # zsh
-        if ! grep -q zsh /etc/shells; then # test if zsh is a shell
-            info "installing zsh..."
+        # if Ubuntu:
+        read -r os var < <(get_os)
+        if [[ "$os" == 'Ubuntu' ]]; then
             sudo apt --yes update
-            sudo apt --yes install zsh
-        else
-            success "zsh check"
-        fi
-        # mc
-        if ! hash "mc" &>/dev/null; then
-            info "installing mc..."
-            sudo apt --yes update
-            sudo apt --yes install mc
-        else
-            success "mc check"
+            # zsh
+            if ! hash "zsh" &>/dev/null; then
+                info "installing zsh..."
+                sudo apt --yes install zsh
+            else
+                success "zsh check"
+            fi
+            # mc
+            if ! hash "mc" &>/dev/null; then
+                info "installing mc..."
+                sudo apt --yes install mc
+            else
+                success "mc check"
+            fi
+            # exa
+            if ! hash "exa" &>/dev/null; then
+                if [ "$var" == '22.04' ]; then
+                    info "installing mc..."
+                    sudo apt --yes install mc
+                else
+                    warn 'Ubuntu < 22.04 please install exa manually'
+                fi
+            else
+                success "exa check"
+            fi
         fi
 
+        # Install or update required programs (zsh, oh-my-zsh & plugins)
         # should be modified to follow recommended install method
         # Install oh-my-zsh
-        fetch_repo "git://github.com/ohmyzsh/ohmyzsh.git" "$OH_MY_ZSH"
+        fetch_repo https://github.com/ohmyzsh/ohmyzsh.git "$OH_MY_ZSH"
         # Install powerlevel10k for zsh
         fetch_repo https://github.com/romkatv/powerlevel10k.git "$OH_MY_ZSH/custom/themes/powerlevel10k"
         # Install zsh-syntax-highlighting
@@ -178,10 +228,6 @@ if [[ $# -gt 0 ]]; then
         # Install zsh-autosuggestions
         fetch_repo https://github.com/zsh-users/zsh-autosuggestions "$OH_MY_ZSH/custom/plugins/zsh-autosuggestions"
         make_link "$DOTFILES/oh-my-zsh/custom/zsh-autosuggestions.zsh" "$OH_MY_ZSH/custom/zsh-autosuggestions.zsh"
-
-        # Install exa
-        # different for rpi and others, just wait ubuntu 22.04 LTS
-        # then, there will be packet manager
 
         # Symbolic link for shell folder
         make_link "$DOTFILES/shell" "$HOME/.shell"
@@ -192,11 +238,16 @@ if [[ $# -gt 0 ]]; then
         backup "$HOME/.zshrc"
         make_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
 
+        # Symbolic links for p10k.zsh
+        backup "$HOME/.p10k.zsh"
+        make_link "$DOTFILES/oh-my-zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+
         # git
         backup "$HOME/.gitconfig"
         make_link "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
 
         # mc
+        mkdir -p "$HOME/.config/mc"
         for file in "$DOTFILES/mc/config"/*; do
             fname=$(basename "$file")
             backup "$HOME/.config/mc/${fname}"
@@ -208,19 +259,19 @@ if [[ $# -gt 0 ]]; then
         cp "$DOTFILES/mc/skins/dracula256.ini" "$HOME/.local/share/mc/skins/"
 
         # scripts
+        mkdir -p "$HOME/.local/bin"
         for file in "$DOTFILES/scripts"/*; do
             fname=$(basename "$file")
             backup "$HOME/.local/bin/${fname}"
             make_link "$file" "$HOME/.local/bin/${fname}"
         done
 
-        # windows
-        # does not work
-        # if [[ $(uname -a) == *"WSL"* ]];
-        # then
-        # windows terminal
-        # vscode is just auto sync
-        # fi
+        # Windows cross system symlink do not work
+        # Windows terminal
+        # VScode
+
+        # WSL config files
+        # wsl.conf resolv.conf hosts ...
 
         info "Install complete"
         exit 0
