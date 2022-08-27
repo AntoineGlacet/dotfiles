@@ -266,6 +266,11 @@ if [[ $# -gt 0 ]]; then
             make_link "$file" "$HOME/.local/bin/${fname}"
         done
 
+        # tmux
+        backup "$HOME/.tmux.conf"
+        make_link "$DOTFILES/tmux/.tmux.conf" "$HOME/.tmux.conf"
+
+
         # Windows cross system symlink do not work
         # Windows terminal
         # VScode
