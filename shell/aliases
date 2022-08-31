@@ -1,5 +1,8 @@
 # aliases
 
+### sudo ###
+alias sudo='sudo '
+
 ### ls ###
 alias ls='ls --color'
 alias ll='ls -lAFh'
