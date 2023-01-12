@@ -18,7 +18,7 @@ alias lq=ls
 ### tree ###
 alias tre='exa --tree --icons -L 2'
 # cool ls
-alias ex='exa -lah --icons --git'
+alias ex='exa -lah --icons'
 # antoine's vs code stuff
 alias kk='chown_vscode_chown'
 

@@ -189,26 +189,26 @@ if [[ $# -gt 0 ]]; then
         # if Ubuntu:
         read -r os var < <(get_os)
         if [[ "$os" == 'Ubuntu' ]]; then
-            sudo apt --yes update
+            sudo -E apt --yes update
             # zsh
             if ! hash "zsh" &>/dev/null; then
                 info "installing zsh..."
-                sudo apt --yes install zsh
+                sudo -E apt --yes install zsh
             else
                 success "zsh check"
             fi
             # mc
             if ! hash "mc" &>/dev/null; then
                 info "installing mc..."
-                sudo apt --yes install mc
+                sudo -E apt --yes install mc
             else
                 success "mc check"
             fi
             # exa
             if ! hash "exa" &>/dev/null; then
                 if [ "$var" == '22.04' ]; then
-                    info "installing mc..."
-                    sudo apt --yes install mc
+                    info "installing exa..."
+                    sudo -E apt --yes install exa
                 else
                     warn 'Ubuntu < 22.04 please install exa manually'
                 fi
