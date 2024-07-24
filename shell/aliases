@@ -1,5 +1,8 @@
 # aliases
 
+### cd ###
+alias cd="z"
+
 ### sudo ###
 alias sudo='sudo '
 
