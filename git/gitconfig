@@ -1,13 +1,15 @@
 [user]
-	name = Antoine Glacet
-	email = glacet.antoine@gmail.com
+name = Antoine Glacet
+email = glacet.antoine@kansai-airports.co.jp
 [core]
-	editor = code --wait
+editor = code --wait
 [diff]
-	tool = vscode
+tool = vscode
 [difftool "vscode"]
-	cmd = code --wait --diff $LOCAL $REMOTE
+cmd = code --wait --diff $LOCAL $REMOTE
 [merge]
-	tool = vscode
+tool = vscode
 [mergetool "vscode"]
-	cmd = code --wait $MERGED
+cmd = code --wait $MERGED
+[credential]
+helper = cache --timeout 3600

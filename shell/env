@@ -9,8 +9,8 @@ pathprepend "${HOME}/.local/bin" PATH
 pathremove "." PATH
 pathremove "" PATH
 
-pathprepend "$HOME/.local/bin"
-pathprepend "$HOME/miniconda3/bin"
+pathprepend "$HOME/.local/bin" PATH
+pathprepend "$HOME/miniconda3/bin" PATH
 
 # Personal information
 export NAME="Antoine Glacet"
@@ -19,4 +19,10 @@ export EMAIL="antoine.glacet@gmail.com"
 # Ruby
 # Install Ruby Gems to ~/gems
 export GEM_HOME="$HOME/gems"
-pathprepend "$HOME/gems/bin"
+pathprepend "$HOME/gems/bin" PATH
+
+# GO
+pathprepend "/usr/local/go/bin" PATH
+
+# snap
+pathprepend "/snap/bin" PATH
