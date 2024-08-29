@@ -1,12 +1,12 @@
 # Usage: indirect_expand PATH -> $PATH
-indirect_expand () {
+indirect_expand() {
 	env | sed -n "s/^$1=//p"
 }
 
 # Usage: pathremove /path/to/bin [PATH]
 # Eg, to remove ~/bin from $PATH
 #     pathremove ~/bin PATH
-pathremove () {
+pathremove() {
 	local IFS=':'
 	local newpath
 	local dir
@@ -24,7 +24,7 @@ pathremove () {
 # Usage: pathprepend /path/to/bin [PATH]
 # Eg, to prepend ~/bin to $PATH
 #     pathprepend ~/bin PATH
-pathprepend () {
+pathprepend() {
 	# if the path is already in the variable,
 	# remove it so we can move it to the front
 	pathremove "${1}" "${2}"
@@ -38,7 +38,7 @@ pathprepend () {
 # Usage: pathappend /path/to/bin [PATH]
 # Eg, to append ~/bin to $PATH
 #     pathappend ~/bin PATH
-pathappend () {
+pathappend() {
 	pathremove "${1}" "${2}"
 	local var=${2:-PATH}
 	local value
@@ -48,7 +48,7 @@ pathappend () {
 }
 
 # Usage: ssource filename
-ssource () {
+ssource() {
 	[[ -r "$1" ]] && . "$1"
 }
 
@@ -56,23 +56,55 @@ ssource () {
 # Output is
 # <session_name>#<window_index>.<pane_index> <window_name>
 #   <pstree of pane>
-tmuxls () {
-	while read -r pane
-	do
-		IFS="|" read PANE_ID PANE_INDEX WINDOW_INDEX SESSION_NAME WINDOW_NAME <<< "$pane"
+tmuxls() {
+	while read -r pane; do
+		IFS="|" read PANE_ID PANE_INDEX WINDOW_INDEX SESSION_NAME WINDOW_NAME <<<"$pane"
 		echo "${SESSION_NAME}#${WINDOW_INDEX}.${PANE_INDEX} ${WINDOW_NAME}"
 		pstree -p -a -U "$PANE_ID" | sed 's/^/  /'
 		echo "-----"
-	done <<< $(tmux list-panes -a -F "#{pane_pid}|#{pane_index}|#{window_index}|#{session_name}|#{window_name}")
+	done <<<$(tmux list-panes -a -F "#{pane_pid}|#{pane_index}|#{window_index}|#{session_name}|#{window_name}")
 }
 
-# set and unset office proxy
-function setproxy() {
-    export {http,https,ftp}_proxy="http://192.168.3.16:8080"
+## KAP proxy functions
+# Function to enable proxy
+enable_proxy() {
+	export http_proxy="http://192.168.3.16:8080"
+	export https_proxy="http://192.168.3.16:8080"
+	export ftp_proxy="http://192.168.3.16:8080"
+	export no_proxy="localhost,127.0.0.1,.mycompany.com"
+	export ALL_PROXY="socks5://192.168.3.16:1080"
+
+	# For Git
+	git config --global http.proxy $http_proxy
+	git config --global https.proxy $https_proxy
+
+	# For SSH (global, excluding private IP ranges)
+	if ! grep -q "ProxyCommand" ~/.ssh/config; then
+		echo "Adding global SSH proxy configuration..."
+		echo -e "Host !10.*.*.* !172.16.*.* !192.168.*.* !169.254.*.*\n\tProxyCommand nc -X connect -x 192.168.3.16:8080 %h %p" >>~/.ssh/config
+	fi
+
+	echo "Proxy enabled"
 }
 
-function unsetproxy() {
-    unset {http,https,ftp}_proxy
+# Function to disable proxy
+disable_proxy() {
+	unset http_proxy
+	unset https_proxy
+	unset ftp_proxy
+	unset no_proxy
+	unset ALL_PROXY
+
+	# For Git
+	git config --global --unset http.proxy
+	git config --global --unset https.proxy
+
+	# For SSH (global)
+	if grep -q "ProxyCommand" ~/.ssh/config; then
+		echo "Removing global SSH proxy configuration..."
+		sed -i '/ProxyCommand/d' ~/.ssh/config
+		sed -i '/Host !10.*.*.* !172.16.*.* !192.168.*.* !169.254.*.*$/d' ~/.ssh/config
+	fi
+
+	echo "Proxy disabled"
 }
-
-
