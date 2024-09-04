@@ -66,45 +66,75 @@ tmuxls() {
 }
 
 ## KAP proxy functions
-# Function to enable proxy
-enable_proxy() {
-	export http_proxy="http://192.168.3.16:8080"
-	export https_proxy="http://192.168.3.16:8080"
-	export ftp_proxy="http://192.168.3.16:8080"
-	export no_proxy="localhost,127.0.0.1,.mycompany.com"
-	export ALL_PROXY="socks5://192.168.3.16:1080"
 
-	# For Git
+# Define proxy settings
+proxy_host="192.168.3.16"
+proxy_port="8080"
+socks_proxy_port="1080"
+ssh_config="$HOME/.ssh/config"
+
+# Function to set environment variables and Git proxy
+set_proxy_env() {
+	export http_proxy="http://$proxy_host:$proxy_port"
+	export https_proxy="http://$proxy_host:$proxy_port"
+	export ftp_proxy="http://$proxy_host:$proxy_port"
+	export no_proxy="localhost,127.0.0.1,.mycompany.com"
+	export ALL_PROXY="socks5://$proxy_host:$socks_proxy_port"
+
 	git config --global http.proxy $http_proxy
 	git config --global https.proxy $https_proxy
-
-	# For SSH (global, excluding private IP ranges)
-	if ! grep -q "ProxyCommand" ~/.ssh/config; then
-		echo "Adding global SSH proxy configuration..."
-		echo -e "Host !10.*.*.* !172.16.*.* !192.168.*.* !169.254.*.*\n\tProxyCommand nc -X connect -x 192.168.3.16:8080 %h %p" >>~/.ssh/config
-	fi
-
-	echo "Proxy enabled"
 }
 
-# Function to disable proxy
-disable_proxy() {
+# Function to unset environment variables and Git proxy
+unset_proxy_env() {
 	unset http_proxy
 	unset https_proxy
 	unset ftp_proxy
 	unset no_proxy
 	unset ALL_PROXY
 
-	# For Git
 	git config --global --unset http.proxy
 	git config --global --unset https.proxy
+}
 
-	# For SSH (global)
-	if grep -q "ProxyCommand" ~/.ssh/config; then
-		echo "Removing global SSH proxy configuration..."
-		sed -i '/ProxyCommand/d' ~/.ssh/config
-		sed -i '/Host !10.*.*.* !172.16.*.* !192.168.*.* !169.254.*.*$/d' ~/.ssh/config
+# Function to configure SSH proxy
+configure_ssh_proxy() {
+	local action=$1
+	local proxy_config="# Use proxy for all hosts by default
+Host *
+  ProxyCommand nc -X connect -x $proxy_host:$proxy_port %h %p
+
+# Exclude LAN hosts from using the proxy
+Host 192.168.* 10.*.*.* 172.16.*.* 172.31.*.*
+  ProxyCommand none"
+
+	if [[ $action == "enable" ]]; then
+		if grep -q "ProxyCommand nc -X connect -x $proxy_host:$proxy_port" "$ssh_config"; then
+			echo "SSH proxy is already enabled."
+		else
+			echo "$proxy_config" >>"$ssh_config"
+			echo "SSH proxy has been enabled."
+		fi
+	elif [[ $action == "disable" ]]; then
+		if grep -q "ProxyCommand nc -X connect -x $proxy_host:$proxy_port" "$ssh_config"; then
+			sed -i.bak "/# Use proxy for all hosts by default/,/ProxyCommand none/d" "$ssh_config"
+			echo "SSH proxy has been disabled."
+		else
+			echo "SSH proxy is not enabled."
+		fi
 	fi
+}
 
-	echo "Proxy disabled"
+# Function to enable all proxies
+enable_proxy() {
+	set_proxy_env
+	configure_ssh_proxy "enable"
+	echo "Proxy has been enabled."
+}
+
+# Function to disable all proxies
+disable_proxy() {
+	unset_proxy_env
+	configure_ssh_proxy "disable"
+	echo "Proxy has been disabled."
 }

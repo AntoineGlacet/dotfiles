@@ -3,6 +3,7 @@ name = Antoine Glacet
 email = glacet.antoine@kansai-airports.co.jp
 [core]
 editor = code --wait
+sshCommand = ssh -F ~/.ssh/config
 [diff]
 tool = vscode
 [difftool "vscode"]
