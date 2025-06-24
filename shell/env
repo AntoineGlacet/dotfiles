@@ -26,3 +26,7 @@ pathprepend "/usr/local/go/bin" PATH
 
 # snap
 pathprepend "/snap/bin" PATH
+
+# dbt
+export DBT_PROFILES_DIR=/home/yourusername/projects/your-project/dbt/profiles
+export GCP_PROJECT=your-gcp-project-id
