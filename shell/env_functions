@@ -81,6 +81,10 @@ set_proxy_env() {
 	export no_proxy="localhost,127.0.0.1,.mycompany.com"
 	export ALL_PROXY="socks5://$proxy_host:$socks_proxy_port"
 
+	# Uppercase variants for compatibility
+	export HTTP_PROXY="$http_proxy"
+	export HTTPS_PROXY="$https_proxy"
+
 	git config --global http.proxy $http_proxy
 	git config --global https.proxy $https_proxy
 }
@@ -93,37 +97,49 @@ unset_proxy_env() {
 	unset no_proxy
 	unset ALL_PROXY
 
+	unset HTTP_PROXY
+	unset HTTPS_PROXY
+
 	git config --global --unset http.proxy
 	git config --global --unset https.proxy
 }
 
-# Function to configure SSH proxy
+# Function to configure SSH proxy (robust version)
 configure_ssh_proxy() {
 	local action=$1
-	local proxy_config="# Use proxy for all hosts by default
+	local marker_start="# === KAP_PROXY_START ==="
+	local marker_end="# === KAP_PROXY_END ==="
+	local proxy_config="$marker_start
 Host *
   ProxyCommand nc -X connect -x $proxy_host:$proxy_port %h %p
 
 # Exclude LAN hosts from using the proxy
 Host 192.168.* 10.*.*.* 172.16.*.* 172.31.*.*
-  ProxyCommand none"
+  ProxyCommand none
+$marker_end"
+
+	# Ensure the config file exists
+	[[ -f "$ssh_config" ]] || touch "$ssh_config"
 
 	if [[ $action == "enable" ]]; then
-		if grep -q "ProxyCommand nc -X connect -x $proxy_host:$proxy_port" "$ssh_config"; then
+		if grep -q "$marker_start" "$ssh_config"; then
 			echo "SSH proxy is already enabled."
 		else
-			echo "$proxy_config" >>"$ssh_config"
+			echo -e "\n$proxy_config" >> "$ssh_config"
 			echo "SSH proxy has been enabled."
 		fi
 	elif [[ $action == "disable" ]]; then
-		if grep -q "ProxyCommand nc -X connect -x $proxy_host:$proxy_port" "$ssh_config"; then
-			sed -i.bak "/# Use proxy for all hosts by default/,/ProxyCommand none/d" "$ssh_config"
+		if grep -q "$marker_start" "$ssh_config"; then
+			sed -i.bak "/$marker_start/,/$marker_end/d" "$ssh_config"
 			echo "SSH proxy has been disabled."
 		else
 			echo "SSH proxy is not enabled."
 		fi
+	else
+		echo "Usage: configure_ssh_proxy [enable|disable]"
 	fi
 }
+
 
 # Function to enable all proxies
 enable_proxy() {
@@ -137,4 +153,23 @@ disable_proxy() {
 	unset_proxy_env
 	configure_ssh_proxy "disable"
 	echo "Proxy has been disabled."
+}
+
+# Function to check proxy status
+proxy_status() {
+	echo "=== Environment Proxy Variables ==="
+	env | grep -i proxy || echo "No proxy environment variables set."
+
+	# Detect mismatch
+	[[ "$http_proxy" != "$HTTP_PROXY" ]] && echo "⚠️  Mismatch: http_proxy='$http_proxy' vs HTTP_PROXY='$HTTP_PROXY'"
+	[[ "$https_proxy" != "$HTTPS_PROXY" ]] && echo "⚠️  Mismatch: https_proxy='$https_proxy' vs HTTPS_PROXY='$HTTPS_PROXY'"
+
+	echo ""
+	echo "=== Git Proxy Configuration ==="
+	echo "http.proxy: $(git config --global --get http.proxy || echo unset)"
+	echo "https.proxy: $(git config --global --get https.proxy || echo unset)"
+
+	echo ""
+	echo "=== SSH Proxy Configuration Snippet ==="
+	grep -A3 "ProxyCommand nc -X connect -x" "$ssh_config" || echo "No SSH proxy configuration found."
 }
