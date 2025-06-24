@@ -26,3 +26,7 @@ pathprepend "/usr/local/go/bin" PATH
 
 # snap
 pathprepend "/snap/bin" PATH
+
+# dbt
+export DBT_PROFILES_DIR=/home/antoine/projects/dataverse/kap_dataverse/src/data_processing/cloud_composer/dbt_kap/profiles
+export GCP_PROJECT=kap-nami-dev
