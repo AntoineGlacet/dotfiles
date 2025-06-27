@@ -10,7 +10,6 @@ pathremove "." PATH
 pathremove "" PATH
 
 pathprepend "$HOME/.local/bin" PATH
-pathprepend "$HOME/miniconda3/bin" PATH
 
 # Personal information
 export NAME="Your Name"
