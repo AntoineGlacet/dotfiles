@@ -221,6 +221,18 @@ install | i)
         success "pnpm check"
     fi
 
+        # Set zsh as default shell if not already set
+    if [[ "$SHELL" != "$(command -v zsh)" ]]; then
+        if grep -qEi "(microsoft|wsl)" /proc/version; then
+            warn "WSL detected – skipping chsh (manual shell switch required)"
+        else
+            info "Changing default shell to zsh..."
+            chsh -s "$(command -v zsh)"
+        fi
+    else
+        success "zsh is already the default shell"
+    fi
+
     info "Install complete"
 
     ;;
@@ -234,6 +246,18 @@ uninstall | u)
     unmake_link "$DOTFILES/shell" "$HOME/.shell"
     unmake_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
     unmake_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
+
+    # Reset shell to bash if needed
+    if [[ "$SHELL" != "$(command -v bash)" ]]; then
+        if grep -qEi "(microsoft|wsl)" /proc/version; then
+            warn "WSL detected – skipping chsh to bash (manual shell switch required)"
+        else
+            info "Reverting default shell to bash..."
+            chsh -s "$(command -v bash)"
+        fi
+    else
+        success "bash is already the default shell"
+    fi
 
     info "Uninstall complete"
     ;;
