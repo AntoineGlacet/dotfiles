@@ -1,37 +1,29 @@
-# aliases
+# === sudo ===
+alias sudo='sudo '  # enables aliases with sudo
 
-### sudo ###
-alias sudo='sudo '
+# === eza (modern ls) ===
+alias ls='eza --group-directories-first --color=auto'
+alias ll='eza -lFh --group-directories-first --icons --git'
+alias la='eza -laFh --group-directories-first --icons --git'
+alias l='eza -CF --group-directories-first'
+alias li='eza -l --group-directories-first'
+alias lll='eza -lFh --icons'
+alias ms='eza'  # "ms" as alternate
+alias sl='eza'  # for muscle memory typo
+alias lq='eza'  # same
 
-### ls ###
-alias ls='ls --color'
-alias ll='ls -lAFh'
-alias l='ls -CF'
-alias li='ls -l'
-alias la='ls -CAF'
-alias lll='ls -lFh'
-alias ms=ls
-alias sl=ls
-alias lq=ls
-###
+# cool eza views
+alias ex='eza -lah --icons --git'             # full long view with git info
+alias tre='eza --tree --icons -L 2 --git'      # tree with icons and git status
 
-### tree ###
-alias tre='eza --tree --icons -L 2'
-# cool ls
-alias ex='eza -lah --icons'
-# antoine's vs code stuff
-alias kk='chown_vscode_chown'
-
-
-### grep ###
+# === grep ===
 alias grep='grep --color=auto'
-alias gi='grep -i'     # case insensitive
-alias gn='grep -n'     # line numbers
-alias gin='grep -in'   # case insensitive + line numbers
-alias grin='grep -Rin' # recursive + case insensitive + line numbers
-###
+alias gi='grep -i'
+alias gn='grep -n'
+alias gin='grep -in'
+alias grin='grep -Rin'
 
-### cd ###
+# === cd ===
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
@@ -41,56 +33,45 @@ alias u='cd ..'
 alias uu='cd ../..'
 alias uuu='cd ../../..'
 alias uuuu='cd ../../../..'
-###
 
-### cp mv rm pwd ###
-alias rm='rm -iv' # confirm before rm
+# === file management ===
+alias rm='rm -iv'
 alias cp='cp -v'
 alias mv='mv -v'
-alias p=pwd
-###
+alias p='pwd'
 
-### htop processes of current user ###
-alias h="htop -u \$(whoami)"
-###
+# === system ===
+alias h='htop -u "$(whoami)"'
+alias rot13='tr a-zA-Z n-za-mN-ZA-M'
 
-### indent args for C/C++ ###
+# === calendar view ===
+alias c='paste -d" " <((echo -n "   "; ncal -w | tail -1 )| fold -w 3) <(cal)'
+
+# === supervisor ===
+alias s='supervisorctl'
+
+# === code ===
 alias indentC='indent -bad -bap -bbb -sob -bli0 -cli2 -cbi0 -nss -pcs -ncs -saf -sai -saw -nprs -nbc -di0 -nbfda -npsl -bls -blf -i2 -ci0 -nip -l80 -bbo -v -pmt'
-###
 
-### screen ###
+# === screen ===
 alias sls='screen -ls'
 alias srd='screen -rd'
 alias S='screen -S'
 alias sdm='screen -Sdm'
-###
 
-#### tmux ###
+# === tmux ===
 alias tls='tmux list-sessions'
 alias tn='tmux new -s'
 alias ta='tmux attach -t'
-###
 
-### print given line range (e.g.: lines 11,42 file.txt) ###
-function lines {
-    sed -n $1p $2
-}
-
-### git ###
-alias g='git'
-###
-
-### docker ###
-alias d='docker'
-alias dc='docker compose'
-###
-
-### miscellaneous ###
-alias rot13='tr a-zA-Z n-za-mN-ZA-M'
-alias c='paste -d" " <((echo -n "   "; ncal -w | tail -1 )| fold -w 3) <(cal)'
-alias s='supervisorctl'
-###
-
-### midnight commander ###
+# === misc ===
+alias kk='chown_vscode_chown'
 alias mc='mc -X'
 
+# === git & docker ===
+alias g='git'
+alias d='docker'
+alias dc='docker compose'
+
+# === print lines from file ===
+lines() { sed -n "$1"p "$2"; }

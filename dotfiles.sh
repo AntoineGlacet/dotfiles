@@ -1,56 +1,18 @@
 #!/bin/bash
 ############################
 # dotfiles.sh
-# This script install or uninstall dotfiles
-# Shamelessly stolen from https://github.com/reenjii/dotfiles.git
+# Install or uninstall dotfiles and tooling
 ############################
 
 ########## Variables
 
-# dotfiles folder
 DOTFILES="$HOME/dotfiles"
 BACKUP="$DOTFILES/backup"
-
-# ohmyzsh install folder
 OH_MY_ZSH="$HOME/.oh-my-zsh"
 
-# if running on WSL
-# if [[ $(uname -a) == *"WSL"* ]];
-# then
+########## Display Helpers
 
-#     echo "WSL detected, symlinking between windows and WSL"
-#     # add cmd.exe to PATH
-#     export PATH=$PATH:/mnt/c/WINDOWS/system32/
-
-#     IFS='\'
-#     read -ra AD <<< $(cd /mnt/c && cmd.exe /c "echo %APPDATA%")
-#     read -ra LD <<< $(cd /mnt/c && cmd.exe /c "echo %LOCALAPPDATA%")
-#     read -ra UP <<< $(cd /mnt/c && cmd.exe /c "echo %USERPROFILE%")
-
-#     APPDATA="/mnt/c/${AD[1]}/${AD[2]}/${AD[3]}/${AD[4]}"
-#     LOCALAPPDATA="/mnt/c/${LD[1]}/${LD[2]}/${LD[3]}/${LD[4]}"
-#     USERPROFILE="/mnt/c/${UP[1]}/${UP[2]}"
-
-#     APPDATA=${APPDATA::-1}
-#     LOCALAPPDATA=${LOCALAPPDATA::-1}
-#     USERPROFILE=${USERPROFILE::-1}
-
-# fi
-
-##########
-
-########## Functions
-
-# Check that a given command exists
-need_cmd() {
-    if ! hash "$1" &>/dev/null; then
-        error "$1 is needed (command not found)"
-    fi
-    success "$1 check"
-}
-
-### Display
-COLOR_OFF='\033[0m' # Text Reset
+COLOR_OFF='\033[0m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
 GREEN='\033[0;32m'
@@ -58,118 +20,78 @@ msg() { printf '%b\n' "$1" >&2; }
 success() { msg "${GREEN}[✔]${COLOR_OFF} $1"; }
 info() { msg "${BLUE}[ℹ]${COLOR_OFF} $1"; }
 warn() { msg "${RED}[✘]${COLOR_OFF} $1"; }
-error() {
-    msg "${RED}[✘]${COLOR_OFF} $1"
-    exit 1
+error() { msg "${RED}[✘]${COLOR_OFF} $1"; exit 1; }
+
+########## Helpers
+
+need_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        error "$1 is needed (command not found)"
+    fi
+    success "$1 check"
 }
 
-function get_os {
+get_os() {
     if [ -f /etc/os-release ]; then
-        # freedesktop.org and systemd
-        # shellcheck source=/dev/null
+        # shellcheck disable=SC1091
         . /etc/os-release
         OS=$NAME
         VER=$VERSION_ID
-    elif type lsb_release >/dev/null 2>&1; then
-        # linuxbase.org
-        OS=$(lsb_release -si)
-        VER=$(lsb_release -sr)
-    elif [ -f /etc/lsb-release ]; then
-        # For some versions of Debian/Ubuntu without lsb_release command
-        # shellcheck source=/dev/null
-        . /etc/lsb-release
-        OS=$DISTRIB_ID
-        VER=$DISTRIB_RELEASE
-    elif [ -f /etc/debian_version ]; then
-        # Older Debian/Ubuntu/etc.
-        OS=Debian
-        VER=$(cat /etc/debian_version)
-    # elif [ -f /etc/SuSe-release ]; then
-    #     # Older SuSE/etc.
-    #     ...
-    # elif [ -f /etc/redhat-release ]; then
-    #     # Older Red Hat, CentOS, etc.
-    #     ...
     else
-        # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
         OS=$(uname -s)
         VER=$(uname -r)
     fi
-
     echo "$OS" "$VER"
 }
 
-# Clones or updates a git repository
-# $1 = repository
-# $2 = directory absolute path
-function fetch_repo {
+fetch_repo() {
     local repo=$1
     local dir=$2
     if [[ -d "$dir" ]]; then
-        info "Update $dir"
-        git -C "$dir" pull
+        info "Updating $dir"
+        git -C "$dir" pull --ff-only
     else
-        info "Clone $repo"
+        info "Cloning $repo"
         git clone --depth=1 "$repo" "$dir"
     fi
 }
 
-# Creates a symbolic link
-# $1 = target
-# $2 = link name
-function make_link {
+make_link() {
     local target=$1
     local linkname=$2
+
     if [[ -L "$linkname" ]]; then
-        local linktarget
-        linktarget=$(readlink "$linkname")
-        if [[ "$linktarget" != "$target" ]]; then
-            warn "$linkname is a symbolic link to $linktarget but should target $target instead"
+        if [[ $(readlink "$linkname") == "$target" ]]; then
+            success "$linkname already correct"
         else
-            success "$linkname config file"
+            warn "$linkname points elsewhere"
         fi
+    elif [[ -e "$linkname" ]]; then
+        warn "$linkname exists and is not a symlink"
     else
-        if [[ -e "$linkname" ]]; then
-            warn "$linkname already exists but is not a symbolic link"
-            warn "Please remove $linkname to install $target config file"
-        else
-            info "Install $target config file"
-            ln -v -s "$target" "$linkname"
-        fi
+        info "Linking $linkname → $target"
+        ln -vs "$target" "$linkname"
     fi
 }
 
-# Deletes a symbolic link
-# $1 = target
-# $2 = link name
-function unmake_link {
+unmake_link() {
     local target=$1
     local linkname=$2
-    if [[ -L "$linkname" ]]; then
-        local linktarget
-        linktarget=$(readlink "$linkname")
-        if [[ "$linktarget" =~ $target ]]; then
-            rm -v "$linkname"
-            success "Removed $target config file"
-        fi
-    fi
+    [[ -L "$linkname" && $(readlink "$linkname") =~ $target ]] && rm -v "$linkname" && success "Removed $linkname"
 }
 
-# move to backup with timestamp
-# $1 = target
-function backup {
+backup() {
     local target=$1
     if [[ -e "$target" ]]; then
-        basename=$(basename "$target")
-        cp -L "$target" "$BACKUP/$(date +%y%m%d_%H%M%S).$basename"
-        rm "$target"
+        mkdir -p "$BACKUP"
+        cp -L "$target" "$BACKUP/$(date +%y%m%d_%H%M%S).$(basename "$target")"
+        rm -f "$target"
     fi
 }
 
-# Install eza from gierens repo
-function install_eza {
+install_eza() {
     sudo apt update
-    sudo apt install -y gpg
+    sudo apt install -y gpg wget
     sudo mkdir -p /etc/apt/keyrings
     wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
     echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
@@ -178,149 +100,150 @@ function install_eza {
     sudo apt install -y eza
 }
 
-##########
-
-########## Script
-usage() {
-    echo "dotfiles install script"
-    echo ""
-    echo "Usage : dotfiles (install|uninstall)"
+install_oh_my_zsh() {
+    if [[ ! -d "$OH_MY_ZSH" ]]; then
+        info "Installing Oh My Zsh..."
+        RUNZSH=no CHSH=no KEEP_ZSHRC=yes bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    else
+        success "Oh My Zsh already installed"
+    fi
 }
 
-if [[ $# -gt 0 ]]; then
-    case $1 in
-    install | i)
-        info "Install dotfiles"
+########## Script Entry Point
 
-        # Needed commands
-        need_cmd 'git'
-        need_cmd 'curl'
-        need_cmd 'ln'
+usage() {
+    echo -e "\nUsage: dotfiles.sh (install|uninstall|--help)\n"
+}
 
-        need_cmd 'wget'
-        need_cmd 'gpg'
-        # if Ubuntu:
-        read -r os var < <(get_os)
-        if [[ "$os" == 'Ubuntu' ]]; then
-            sudo -E apt --yes update
-            # zsh
-            if ! hash "zsh" &>/dev/null; then
-                info "installing zsh..."
-                sudo -E apt --yes install zsh
-            else
-                success "zsh check"
-            fi
-            # mc
-            if ! hash "mc" &>/dev/null; then
-                info "installing mc..."
-                sudo -E apt --yes install mc
-            else
-                success "mc check"
-            fi
-            # eza
-            if ! hash "eza" &>/dev/null; then
-                info "installing eza..."
-                install_eza
-            else
-                success "eza check"
-            fi
-        fi
-
-        # Install or update required programs (zsh, oh-my-zsh & plugins)
-        # should be modified to follow recommended install method
-        # Install oh-my-zsh
-        fetch_repo https://github.com/ohmyzsh/ohmyzsh.git "$OH_MY_ZSH"
-        # Install powerlevel10k for zsh
-        fetch_repo https://github.com/romkatv/powerlevel10k.git "$OH_MY_ZSH/custom/themes/powerlevel10k"
-        # Install zsh-syntax-highlighting
-        fetch_repo https://github.com/zsh-users/zsh-syntax-highlighting.git "$OH_MY_ZSH/custom/plugins/zsh-syntax-highlighting"
-        # Install zsh-autosuggestions
-        fetch_repo https://github.com/zsh-users/zsh-autosuggestions "$OH_MY_ZSH/custom/plugins/zsh-autosuggestions"
-        make_link "$DOTFILES/oh-my-zsh/custom/zsh-autosuggestions.zsh" "$OH_MY_ZSH/custom/zsh-autosuggestions.zsh"
-
-        # Symbolic link for shell folder
-        make_link "$DOTFILES/shell" "$HOME/.shell"
-
-        # Symbolic links for files in shell folder
-        backup "$HOME/.bashrc"
-        make_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
-        backup "$HOME/.zshrc"
-        make_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
-
-        # Symbolic links for p10k.zsh
-        backup "$HOME/.p10k.zsh"
-        make_link "$DOTFILES/oh-my-zsh/.p10k.zsh" "$HOME/.p10k.zsh"
-
-        # git
-        backup "$HOME/.gitconfig"
-        make_link "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
-
-        # mc
-        mkdir -p "$HOME/.config/mc"
-        for file in "$DOTFILES/mc/config"/*; do
-            fname=$(basename "$file")
-            backup "$HOME/.config/mc/${fname}"
-            make_link "$file" "$HOME/.config/mc/${fname}"
-        done
-
-        # mc skin (edited dracula)
-        mkdir -p "$HOME/.local/share/mc/skins"
-        cp "$DOTFILES/mc/skins/dracula256.ini" "$HOME/.local/share/mc/skins/"
-
-        # scripts
-        mkdir -p "$HOME/.local/bin"
-        for file in "$DOTFILES/scripts"/*; do
-            fname=$(basename "$file")
-            backup "$HOME/.local/bin/${fname}"
-            make_link "$file" "$HOME/.local/bin/${fname}"
-        done
-
-        # tmux
-        backup "$HOME/.tmux.conf"
-        make_link "$DOTFILES/tmux/.tmux.conf" "$HOME/.tmux.conf"
-
-
-        # Windows cross system symlink do not work
-        # Windows terminal
-        # VScode
-
-        # WSL config files
-        # wsl.conf resolv.conf hosts ...
-
-        info "Install complete"
-        exit 0
-        ;;
-    uninstall | u)
-        info "Uninstall dotfiles"
-
-        # Needed commands
-        need_cmd 'git'
-        need_cmd 'curl'
-        need_cmd 'ln'
-        need_cmd 'wget'
-        need_cmd 'gpg'
-
-        # We leave oh-my-zsh repo
-
-        # Symbolic link for shell folder
-        unmake_link "$DOTFILES/shell" "$HOME/.shell"
-
-        # Symbolic links for files in shell folder
-        unmake_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
-        unmake_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
-
-        info "Uninstall complete"
-        exit 0
-        ;;
-    --help | -h)
-        usage
-        exit 0
-        ;;
-    *)
-        usage
-        exit 0
-        ;;
-    esac
+if [[ $# -eq 0 ]]; then
+    usage
+    exit 1
 fi
 
-usage
+case $1 in
+install | i)
+    info "Installing dotfiles and tools"
+
+    # Check required commands
+    for cmd in git curl ln wget gpg; do
+        need_cmd "$cmd"
+    done
+
+    os=$(get_os | awk '{print $1}')
+
+    if [[ "$os" == "Ubuntu" ]]; then
+        sudo apt update
+        sudo apt install -y zsh mc python3-pip build-essential libssl-dev zlib1g-dev \
+            libbz2-dev libreadline-dev libsqlite3-dev curl libncursesw5-dev xz-utils \
+            tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+
+        if ! command -v eza &>/dev/null; then
+            install_eza
+        else
+            success "eza check"
+        fi
+    fi
+
+    install_oh_my_zsh
+
+    # Plugins
+    ZSH_CUSTOM=${ZSH_CUSTOM:-$OH_MY_ZSH/custom}
+    fetch_repo https://github.com/romkatv/powerlevel10k.git "$ZSH_CUSTOM/themes/powerlevel10k"
+    fetch_repo https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+    fetch_repo https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
+
+    make_link "$DOTFILES/oh-my-zsh/custom/zsh-autosuggestions.zsh" "$ZSH_CUSTOM/zsh-autosuggestions.zsh"
+
+    # Shell config
+    make_link "$DOTFILES/shell" "$HOME/.shell"
+    backup "$HOME/.bashrc"
+    make_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
+    backup "$HOME/.zshrc"
+    make_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
+    backup "$HOME/.p10k.zsh"
+    make_link "$DOTFILES/oh-my-zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+
+    # Git config
+    backup "$HOME/.gitconfig"
+    make_link "$DOTFILES/git/gitconfig" "$HOME/.gitconfig"
+
+    # Midnight Commander
+    mkdir -p "$HOME/.config/mc"
+    for file in "$DOTFILES/mc/config"/*; do
+        fname=$(basename "$file")
+        backup "$HOME/.config/mc/$fname"
+        make_link "$file" "$HOME/.config/mc/$fname"
+    done
+    mkdir -p "$HOME/.local/share/mc/skins"
+    cp "$DOTFILES/mc/skins/dracula256.ini" "$HOME/.local/share/mc/skins/"
+
+    # Scripts
+    mkdir -p "$HOME/.local/bin"
+    for file in "$DOTFILES/scripts"/*; do
+        fname=$(basename "$file")
+        backup "$HOME/.local/bin/$fname"
+        make_link "$file" "$HOME/.local/bin/$fname"
+    done
+
+    # Tmux
+    backup "$HOME/.tmux.conf"
+    make_link "$DOTFILES/tmux/.tmux.conf" "$HOME/.tmux.conf"
+
+    # direnv
+    if ! command -v direnv &>/dev/null; then
+        info "Installing direnv..."
+        sudo apt install -y direnv
+    else
+        success "direnv check"
+    fi
+
+    # pyenv & pyenv-virtualenv
+    if [[ ! -d "$HOME/.pyenv" ]]; then
+        info "Installing pyenv..."
+        curl https://pyenv.run | bash
+    else
+        success "pyenv already installed"
+    fi
+
+    # nvm
+    if [[ ! -d "$HOME/.nvm" ]]; then
+        info "Installing NVM..."
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    else
+        success "nvm already installed"
+    fi
+
+    # pnpm
+    if ! command -v pnpm &>/dev/null; then
+        info "Installing pnpm..."
+        curl -fsSL https://get.pnpm.io/install.sh | bash -
+    else
+        success "pnpm check"
+    fi
+
+    info "Install complete"
+
+    ;;
+
+uninstall | u)
+    info "Uninstalling dotfiles"
+    for cmd in git curl ln; do
+        need_cmd "$cmd"
+    done
+
+    unmake_link "$DOTFILES/shell" "$HOME/.shell"
+    unmake_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
+    unmake_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
+
+    info "Uninstall complete"
+    ;;
+
+--help | -h)
+    usage
+    ;;
+
+*)
+    usage
+    exit 1
+    ;;
+esac
