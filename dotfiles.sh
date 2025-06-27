@@ -45,7 +45,6 @@ OH_MY_ZSH="$HOME/.oh-my-zsh"
 need_cmd() {
     if ! hash "$1" &>/dev/null; then
         error "$1 is needed (command not found)"
-        exit 1
     fi
     success "$1 check"
 }
@@ -167,6 +166,18 @@ function backup {
     fi
 }
 
+# Install eza from gierens repo
+function install_eza {
+    sudo apt update
+    sudo apt install -y gpg
+    sudo mkdir -p /etc/apt/keyrings
+    wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
+    sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
+    sudo apt update
+    sudo apt install -y eza
+}
+
 ##########
 
 ########## Script
@@ -186,6 +197,8 @@ if [[ $# -gt 0 ]]; then
         need_cmd 'curl'
         need_cmd 'ln'
 
+        need_cmd 'wget'
+        need_cmd 'gpg'
         # if Ubuntu:
         read -r os var < <(get_os)
         if [[ "$os" == 'Ubuntu' ]]; then
@@ -204,16 +217,12 @@ if [[ $# -gt 0 ]]; then
             else
                 success "mc check"
             fi
-            # exa
-            if ! hash "exa" &>/dev/null; then
-                if [ "$var" == '22.04' ]; then
-                    info "installing exa..."
-                    sudo -E apt --yes install exa
-                else
-                    warn 'Ubuntu < 22.04 please install exa manually'
-                fi
+            # eza
+            if ! hash "eza" &>/dev/null; then
+                info "installing eza..."
+                install_eza
             else
-                success "exa check"
+                success "eza check"
             fi
         fi
 
@@ -288,6 +297,8 @@ if [[ $# -gt 0 ]]; then
         need_cmd 'git'
         need_cmd 'curl'
         need_cmd 'ln'
+        need_cmd 'wget'
+        need_cmd 'gpg'
 
         # We leave oh-my-zsh repo
 
