@@ -221,13 +221,15 @@ install | i)
         success "pnpm check"
     fi
 
-        # Set zsh as default shell if not already set
+    # Set zsh as default shell if not already set
     if [[ "$SHELL" != "$(command -v zsh)" ]]; then
         if grep -qEi "(microsoft|wsl)" /proc/version; then
             warn "WSL detected – skipping chsh (manual shell switch required)"
-        else
+        elif sudo -n true 2>/dev/null; then
             info "Changing default shell to zsh..."
-            chsh -s "$(command -v zsh)"
+            sudo chsh -s "$(command -v zsh)" "$USER"
+        else
+            warn "Passwordless sudo not available – skipping chsh"
         fi
     else
         success "zsh is already the default shell"
@@ -251,9 +253,11 @@ uninstall | u)
     if [[ "$SHELL" != "$(command -v bash)" ]]; then
         if grep -qEi "(microsoft|wsl)" /proc/version; then
             warn "WSL detected – skipping chsh to bash (manual shell switch required)"
-        else
+        elif sudo -n true 2>/dev/null; then
             info "Reverting default shell to bash..."
-            chsh -s "$(command -v bash)"
+            sudo chsh -s "$(command -v bash)" "$USER"
+        else
+            warn "Passwordless sudo not available – skipping chsh to bash"
         fi
     else
         success "bash is already the default shell"
