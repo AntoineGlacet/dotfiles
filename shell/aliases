@@ -22,7 +22,7 @@ alias grin='grep -Rin'
 # === cd with ll ===
 cd() {
   if builtin cd "$@"; then
-    ll
+    eza -lh --group-directories-first --icons
   fi
 }
 
