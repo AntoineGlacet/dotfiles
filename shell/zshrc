@@ -3,6 +3,10 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+# === Locale fix ===
+export LANG=C.UTF-8
+export LC_ALL=C.UTF-8
+
 # === Path ===
 export PATH="$HOME/bin:/usr/local/bin:$PATH"
 
@@ -34,7 +38,6 @@ else
 fi
 
 # === Language / Editor ===
-export LANG="en_US.UTF-8"
 export EDITOR="nvim"
 
 # === User Config ===
