@@ -1,6 +1,6 @@
 [user]
 name = Your Name
-email = glacet.antoine@kansai-airports.co.jp
+email = antoine.glacet@kansai-airports.co.jp
 [core]
 editor = code --wait
 sshCommand = ssh -F ~/.ssh/config
