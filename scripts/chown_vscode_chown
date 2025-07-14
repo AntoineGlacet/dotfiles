@@ -1,23 +1,46 @@
 #!/bin/bash
 
-########## Script
+########## kk - edit protected file safely in VS Code ##########
+
 usage () {
-    echo "====== cool function ====="
-    echo "chown to current user => edit in vscode => restore file to root after"
-    echo "Usage : kk FILE"
-    echo "====== cool function ====="
+    echo "====== kk: VS Code sudo-safe edit ======"
+    echo "Temporarily chowns file to current user, opens in VS Code, and restores original ownership after."
+    echo "Usage: kk /path/to/file"
+    echo "========================================"
 }
 
-if [[ $# != 0 ]]; then
-    FILE=$1
-    if [[ -f "$FILE" ]]; then
-        owner_orig=$(stat -c %U $FILE)
-        sudo chown $USER $FILE
-        code $FILE --wait
-        sudo chown $owner_orig $FILE
-        echo "owner was $owner_orig"
-    else
-    echo "not a file"
-    fi
-else usage
+# Exit on error, undefined var, or pipeline fail
+set -euo pipefail
+
+# Check args
+if [[ $# -ne 1 ]]; then
+    usage
+    exit 1
 fi
+
+FILE=$(realpath "$1")
+
+if [[ ! -f "$FILE" ]]; then
+    echo "❌ Not a file: $FILE"
+    exit 1
+fi
+
+# Get original owner and group
+ORIG_USER=$(stat -c '%U' "$FILE")
+ORIG_GROUP=$(stat -c '%G' "$FILE")
+
+echo "📄 File: $FILE"
+echo "👤 Original owner: $ORIG_USER:$ORIG_GROUP"
+
+# Take ownership
+echo "🔧 Taking temporary ownership..."
+sudo chown "$USER":"$USER" "$FILE"
+
+# Trap to restore ownership if user Ctrl+C or exits
+trap 'echo "⏎ Restoring ownership to $ORIG_USER:$ORIG_GROUP"; sudo chown "$ORIG_USER":"$ORIG_GROUP" "$FILE"' EXIT
+
+# Open in VS Code and wait
+code --wait "$FILE"
+
+# On successful close, ownership is restored by trap
+echo "✅ Done editing: ownership restored."
