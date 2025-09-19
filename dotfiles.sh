@@ -9,6 +9,8 @@
 DOTFILES="$HOME/dotfiles"
 BACKUP="$DOTFILES/backup"
 OH_MY_ZSH="$HOME/.oh-my-zsh"
+PYTHON_VERSION="3.12.2"
+NODE_VERSION="20.11.1"
 
 ########## Display Helpers
 
@@ -137,6 +139,51 @@ install | i)
             libbz2-dev libreadline-dev libsqlite3-dev curl libncursesw5-dev xz-utils \
             tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
 
+        if ! command -v docker &>/dev/null; then
+            info "Installing Docker..."
+            sudo apt install -y ca-certificates curl gnupg
+            sudo install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            sudo chmod a+r /etc/apt/keyrings/docker.gpg
+            # shellcheck disable=SC1091
+            . /etc/os-release
+            echo \
+                "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $VERSION_CODENAME stable" \
+                | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+            sudo apt update
+            sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        else
+            success "docker check"
+        fi
+
+        if ! getent group docker &>/dev/null; then
+            info "Creating docker group"
+            sudo groupadd docker
+        else
+            success "docker group exists"
+        fi
+
+        if id -nG "$USER" | grep -qw docker; then
+            success "User $USER already in docker group"
+        else
+            info "Adding $USER to docker group"
+            sudo usermod -aG docker "$USER"
+            warn "Log out and back in (or run 'newgrp docker') for group changes to apply"
+        fi
+
+        if command -v systemctl &>/dev/null; then
+            if sudo systemctl is-enabled docker &>/dev/null; then
+                success "docker service already enabled"
+            else
+                info "Enabling and starting docker service"
+                if ! sudo systemctl enable --now docker; then
+                    warn "Unable to enable/start docker service automatically"
+                fi
+            fi
+        else
+            warn "systemctl not available – ensure Docker is started manually"
+        fi
+
         if ! command -v eza &>/dev/null; then
             install_eza
         else
@@ -205,12 +252,44 @@ install | i)
         success "pyenv already installed"
     fi
 
+    export PYENV_ROOT="$HOME/.pyenv"
+    export PATH="$PYENV_ROOT/bin:$PATH"
+    if [[ -x "$PYENV_ROOT/bin/pyenv" ]]; then
+        if "$PYENV_ROOT/bin/pyenv" versions --bare | grep -qx "$PYTHON_VERSION"; then
+            success "Python $PYTHON_VERSION already installed via pyenv"
+        else
+            info "Installing Python $PYTHON_VERSION via pyenv..."
+            "$PYENV_ROOT/bin/pyenv" install -s "$PYTHON_VERSION"
+        fi
+        info "Setting global Python version to $PYTHON_VERSION"
+        "$PYENV_ROOT/bin/pyenv" global "$PYTHON_VERSION"
+    else
+        warn "pyenv executable not found at $PYENV_ROOT/bin/pyenv"
+    fi
+
     # nvm
     if [[ ! -d "$HOME/.nvm" ]]; then
         info "Installing NVM..."
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
     else
         success "nvm already installed"
+    fi
+
+    export NVM_DIR="$HOME/.nvm"
+    if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+        # shellcheck disable=SC1090,SC1091
+        . "$NVM_DIR/nvm.sh"
+        if nvm ls "$NODE_VERSION" | grep -q "$NODE_VERSION"; then
+            success "Node.js $NODE_VERSION already installed"
+        else
+            info "Installing Node.js $NODE_VERSION via nvm..."
+            nvm install "$NODE_VERSION"
+        fi
+        nvm alias default "$NODE_VERSION"
+        nvm use "$NODE_VERSION" >/dev/null
+        success "Node.js $NODE_VERSION set as default"
+    else
+        warn "NVM initialization script not found"
     fi
 
     # pnpm
