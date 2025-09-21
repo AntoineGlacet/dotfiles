@@ -32,31 +32,27 @@ on Windows.
 
 ## What the installer does
 
-Running `./dotfiles.sh install` performs the following high-level tasks:
+Running `./dotfiles.sh install` now supports two profiles:
+
+- **extended** *(default)* – provisions the full development toolbox (Docker,
+  language runtimes, pnpm) alongside the dotfiles.
+- **core** – keeps the configuration lean and skips the heavy tooling so you can
+  add languages and runtimes manually later.
+
+Regardless of the profile, the installer:
 
 1. **Validates required base commands** – ensures `git`, `curl`, `ln`, `wget`,
    and `gpg` are available before proceeding.
-2. **Installs Ubuntu packages (when `apt` is present)** – installs:
-   - `zsh`, `mc`, and `direnv` for shell enhancements.
-   - Build tooling and libraries needed by `pyenv`
-     (`build-essential`, `libssl-dev`, `zlib1g-dev`, `libbz2-dev`,
-     `libreadline-dev`, `libsqlite3-dev`, `libncursesw5-dev`, `xz-utils`, `tk-dev`,
-     `libxml2-dev`, `libxmlsec1-dev`, `libffi-dev`, `liblzma-dev`).
-   - `python3-pip` for general Python package management.
-   - Docker Engine and CLI if they are not already installed.
-   - The [eza](https://eza.rocks/) modern `ls` replacement (added via the official
-     upstream apt repository if missing).
-3. **Sets up Docker** – creates the `docker` group when necessary, adds the
-   current user to that group, and enables the Docker service if `systemd`
-   controls it. The script reminds you to log out/in (or run `newgrp docker`) so
-   the new group membership takes effect.
-4. **Installs Oh My Zsh** – downloads the Oh My Zsh framework (without replacing
+2. **Installs Ubuntu packages (when `apt` is present)** – installs `zsh` and
+   `mc`, then ensures the [eza](https://eza.rocks/) modern `ls` replacement is
+   available.
+3. **Installs Oh My Zsh** – downloads the Oh My Zsh framework (without replacing
    your existing `~/.zshrc`), then ensures the following plugins and theme are
    available in `~/.oh-my-zsh/custom`:
    - [powerlevel10k](https://github.com/romkatv/powerlevel10k) theme
    - [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
    - [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-5. **Creates symlinks to dotfiles** – backs up any existing files into
+4. **Creates symlinks to dotfiles** – backs up any existing files into
    `backup/` (timestamped copies) before linking the repository versions:
    - Shell: `~/.shell`, `~/.bashrc`, `~/.zshrc`, and `~/.p10k.zsh`.
    - Git: `~/.gitconfig`.
@@ -64,15 +60,28 @@ Running `./dotfiles.sh install` performs the following high-level tasks:
      `~/.local/share/mc/skins/`.
    - Scripts: every file in `scripts/` is linked into `~/.local/bin/`.
    - tmux: `~/.tmux.conf` including plugin manager bootstrap.
-6. **Bootstraps language tooling**:
-   - Installs `pyenv` and ensures Python `3.12.2` is present and set as the
-     global interpreter.
-   - Installs `nvm`, makes Node.js `20.11.1` the default, and activates it for
-     the current session.
-   - Installs `pnpm` (if not already available) using the upstream installer.
-7. **Changes the default shell to Zsh** – when not already the default, the
+5. **Changes the default shell to Zsh** – when not already the default, the
    script runs `chsh` under sudo. On WSL this step is skipped and a reminder is
    printed, because `chsh` frequently fails inside WSL without additional setup.
+
+When the **extended** profile is selected, the script performs additional
+bootstrap tasks:
+
+- **Installs extra Ubuntu tooling** – adds `python3-pip` along with the build
+  dependencies that `pyenv` needs (`build-essential`, `libssl-dev`, `zlib1g-dev`,
+  `libbz2-dev`, `libreadline-dev`, `libsqlite3-dev`, `libncursesw5-dev`,
+  `xz-utils`, `tk-dev`, `libxml2-dev`, `libxmlsec1-dev`, `libffi-dev`,
+  `liblzma-dev`). If Docker Engine/CLI are missing they are installed from the
+  official repository.
+- **Configures Docker** – creates the `docker` group when necessary, adds the
+  current user to that group, and enables the Docker service if `systemd`
+  controls it. A reminder prompts you to log out/in (or run `newgrp docker`) so
+  the new group membership takes effect.
+- **Installs direnv** – installs `direnv` via `apt` on Ubuntu systems (other
+  platforms receive a warning so you can install it manually).
+- **Bootstraps language tooling** – installs `pyenv`, ensures Python `3.12.2`
+  is present and set as the global interpreter, installs `nvm`, makes Node.js
+  `20.11.1` the default, and installs `pnpm` when it is not already available.
 
 When all steps finish successfully, the script prints `Install complete`.
 
@@ -150,13 +159,17 @@ settings under version control.
    ```bash
    chmod +x dotfiles.sh
    ```
-3. Run the installer:
+3. Run the installer (defaults to the `extended` profile). Pass
+   `--profile core` if you want to skip Docker and the language runtimes:
    ```bash
    ./dotfiles.sh install
+   # or
+   ./dotfiles.sh install --profile core
    ```
 4. Follow any prompts in the terminal (e.g., logging out/in for Docker group
-   membership). Restart your shell after installation so that pyenv, nvm, pnpm,
-   and the new Zsh configuration are loaded.
+   membership when using the extended profile). Restart your shell after
+   installation so that pyenv, nvm, pnpm, and the new Zsh configuration are
+   loaded.
 
 ## Uninstalling
 
