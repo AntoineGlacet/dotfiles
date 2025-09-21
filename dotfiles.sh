@@ -18,6 +18,14 @@ DETECTED_VERSION=""
 LOG_DIR="$BACKUP"
 LOG_FILE="$LOG_DIR/dotfiles-install.log"
 
+PROGRESS_FD=
+
+cleanup_progress_fd() {
+    if [[ ${PROGRESS_FD:-} =~ ^[0-9]+$ ]]; then
+        eval "exec ${PROGRESS_FD}>&-"
+    fi
+}
+
 if ! command -v tee >/dev/null 2>&1; then
     printf 'Error: required command "tee" not found in PATH.\n' >&2
     exit 1
@@ -26,6 +34,12 @@ fi
 if ! mkdir -p "$LOG_DIR"; then
     printf 'Error: unable to create log directory %s\n' "$LOG_DIR" >&2
     exit 1
+fi
+
+if [[ -t 2 ]]; then
+    exec 4>&2
+    PROGRESS_FD=4
+    trap cleanup_progress_fd EXIT
 fi
 
 exec > >(tee -a "$LOG_FILE") 2>&1
@@ -65,6 +79,7 @@ run_with_loading_bar() {
     local progress_label=$1
     shift || true
     local -a cmd=("$@")
+    local progress_fd=${PROGRESS_FD:-2}
 
     {
         "${cmd[@]}"
@@ -72,7 +87,7 @@ run_with_loading_bar() {
     local pid=$!
     local status
 
-    if [[ -t 2 ]]; then
+    if [[ -t "$progress_fd" ]]; then
         local width=40
         local progress=0
         local filled remaining
@@ -91,10 +106,10 @@ run_with_loading_bar() {
                 printf -v remaining '%*s' "$rest" ''
                 remaining=${remaining// /.}
             fi
-            printf '\r%s [%s%s]' "$progress_label" "$filled" "$remaining" >&2
+            printf '\r%s [%s%s]' "$progress_label" "$filled" "$remaining" >&"$progress_fd"
             sleep 0.1
         done
-        printf '\r\033[K' >&2
+        printf '\r\033[K' >&"$progress_fd"
     fi
 
     wait "$pid"
