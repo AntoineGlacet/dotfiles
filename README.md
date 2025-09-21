@@ -35,7 +35,7 @@ on Windows.
 Running `./dotfiles.sh install` performs the following high-level tasks:
 
 1. **Validates required base commands** – ensures `git`, `curl`, `ln`, `wget`,
-   and `gpg` are available before proceeding.
+   `gpg`, and `tee` are available before proceeding.
 2. **Installs Ubuntu packages (when `apt` is present)** – installs:
    - `zsh`, `mc`, and `direnv` for shell enhancements.
    - Build tooling and libraries needed by `pyenv`
@@ -74,7 +74,8 @@ Running `./dotfiles.sh install` performs the following high-level tasks:
    script runs `chsh` under sudo. On WSL this step is skipped and a reminder is
    printed, because `chsh` frequently fails inside WSL without additional setup.
 
-When all steps finish successfully, the script prints `Install complete`.
+When all steps finish successfully, the script prints `Install complete` and
+shows where the run was logged (`backup/dotfiles-install.log`).
 
 ### Midnight Commander theme
 
@@ -156,7 +157,8 @@ settings under version control.
    ```
 4. Follow any prompts in the terminal (e.g., logging out/in for Docker group
    membership). Restart your shell after installation so that pyenv, nvm, pnpm,
-   and the new Zsh configuration are loaded.
+   and the new Zsh configuration are loaded. The full transcript is stored in
+   `backup/dotfiles-install.log` for later review.
 
 ## Uninstalling
 
