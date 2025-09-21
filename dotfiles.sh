@@ -6,7 +6,7 @@
 
 ########## Variables
 
-DOTFILES="$HOME/dotfiles"
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP="$DOTFILES/backup"
 OH_MY_ZSH="$HOME/.oh-my-zsh"
 PYTHON_VERSION="3.12.2"
