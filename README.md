@@ -19,7 +19,7 @@ on Windows.
 ```
 .
 ├── dotfiles.sh                # Linux / WSL bootstrap entry point
-├── dotfiles.ps1               # Windows helper for Terminal and VS Code settings
+├── dotfiles.ps1               # Windows helper for Terminal settings
 ├── shell/                     # Shared shell snippets for Bash & Zsh
 ├── oh-my-zsh/                 # Custom theme/plugin configuration (Powerlevel10k)
 ├── git/gitconfig              # Git defaults
@@ -122,7 +122,7 @@ handy for editing system files without running the editor as root.
 
 ## Windows companion setup
 
-The PowerShell script `dotfiles.ps1` helps keep Windows-specific settings in
+The PowerShell script `dotfiles.ps1` helps keep Windows Terminal settings in
 sync. Run it from an elevated PowerShell prompt:
 
 ```powershell
@@ -130,14 +130,11 @@ Set-ExecutionPolicy -Scope Process RemoteSigned
 ./dotfiles.ps1
 ```
 
-It creates symlinks for:
-
-- Windows Terminal configuration (`settings.json`).
-- VS Code settings (the line is currently commented out; uncomment it if you
-  want the repository's settings applied).
-
-There is also a placeholder for linking `.wslconfig` if you keep global WSL
-settings under version control.
+The script automatically locates the appropriate Windows Terminal configuration
+directory (supports both the Microsoft Store and unpackaged installations) and
+creates a symbolic link to `windows/terminal/settings.json`. If the directory is
+not found, it prints guidance to launch Windows Terminal once so the settings
+folder is created before re-running the script.
 
 ## Installation instructions
 
