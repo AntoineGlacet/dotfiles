@@ -43,6 +43,119 @@ info() { msg "${BLUE}[ℹ]${COLOR_OFF} $1"; }
 warn() { msg "${RED}[✘]${COLOR_OFF} $1"; }
 error() { msg "${RED}[✘]${COLOR_OFF} $1"; exit 1; }
 
+ensure_sudo_credentials() {
+    if ! command -v sudo >/dev/null 2>&1; then
+        return 0
+    fi
+
+    if sudo -n true 2>/dev/null; then
+        sudo -v >/dev/null
+        return 0
+    fi
+
+    info "sudo access is required – please enter your password if prompted"
+    if sudo -v; then
+        return 0
+    fi
+
+    error "Failed to refresh sudo credentials"
+}
+
+run_with_loading_bar() {
+    local progress_label=$1
+    shift || true
+    local -a cmd=("$@")
+
+    {
+        "${cmd[@]}"
+    } >>"$LOG_FILE" 2>&1 &
+    local pid=$!
+    local status
+
+    if [[ -t 2 ]]; then
+        local width=40
+        local progress=0
+        local filled remaining
+        while kill -0 "$pid" 2>/dev/null; do
+            if ((progress < width)); then
+                ((progress++))
+            fi
+            filled=''
+            remaining=''
+            if ((progress > 0)); then
+                printf -v filled '%*s' "$progress" ''
+                filled=${filled// /#}
+            fi
+            local rest=$((width - progress))
+            if ((rest > 0)); then
+                printf -v remaining '%*s' "$rest" ''
+                remaining=${remaining// /.}
+            fi
+            printf '\r%s [%s%s]' "$progress_label" "$filled" "$remaining" >&2
+            sleep 0.1
+        done
+        printf '\r\033[K' >&2
+    fi
+
+    wait "$pid"
+    status=$?
+    return $status
+}
+
+apt_update_with_loading() {
+    local message
+    if [[ $# -gt 0 ]]; then
+        message=$1
+        shift
+    else
+        message="Updating apt package lists"
+    fi
+
+    local -a apt_args=("$@")
+
+    ensure_sudo_credentials
+
+    info "$message"
+    if run_with_loading_bar "$message" sudo apt update "${apt_args[@]}"; then
+        success "$message (complete)"
+    else
+        error "$message failed – see $LOG_FILE for details"
+    fi
+}
+
+apt_upgrade_with_loading() {
+    local message
+    if [[ $# -gt 0 ]]; then
+        message=$1
+        shift
+    else
+        message="Upgrading installed packages"
+    fi
+
+    local -a apt_args=("$@")
+    local needs_yes=1
+    for arg in "${apt_args[@]}"; do
+        case $arg in
+        -y | -yy | --assume-yes | --assume-yes=*)
+            needs_yes=0
+            break
+            ;;
+        esac
+    done
+    if ((needs_yes)); then
+        apt_args=("-y" "${apt_args[@]}")
+    fi
+
+    ensure_sudo_credentials
+
+    info "$message"
+    if run_with_loading_bar "$message" sudo apt upgrade "${apt_args[@]}"; then
+        success "$message (complete)"
+    else
+        error "$message failed – see $LOG_FILE for details"
+    fi
+}
+
 ########## Helpers
 
 need_cmd() {
@@ -130,13 +243,13 @@ backup() {
 }
 
 install_eza() {
-    sudo apt update
+    apt_update_with_loading "Updating apt package lists for eza prerequisites"
     sudo apt install -y gpg wget
     sudo mkdir -p /etc/apt/keyrings
     wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
     echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
     sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
-    sudo apt update
+    apt_update_with_loading "Updating apt package lists for the eza repository"
     sudo apt install -y eza
 }
 
@@ -159,7 +272,7 @@ install_ubuntu_packages() {
     fi
 
     if [[ ${#packages[@]} -gt 0 ]]; then
-        sudo apt update
+        apt_update_with_loading "Updating apt package lists for selected packages"
         sudo apt install -y "${packages[@]}"
     fi
 
@@ -187,7 +300,7 @@ ensure_docker() {
         echo \
             "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $VERSION_CODENAME stable" \
             | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
-        sudo apt update
+        apt_update_with_loading "Updating apt package lists for Docker"
         sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     else
         success "docker check"
