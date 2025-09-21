@@ -42,11 +42,22 @@ Running `./dotfiles.sh install` now supports two profiles:
 Regardless of the profile, the installer:
 
 1. **Validates required base commands** – ensures `git`, `curl`, `ln`, `wget`,
-   and `gpg` are available before proceeding.
-2. **Installs Ubuntu packages (when `apt` is present)** – installs `zsh` and
-   `mc`, then ensures the [eza](https://eza.rocks/) modern `ls` replacement is
-   available.
-3. **Installs Oh My Zsh** – downloads the Oh My Zsh framework (without replacing
+   `gpg`, and `tee` are available before proceeding.
+2. **Installs Ubuntu packages (when `apt` is present)** – installs:
+   - `zsh`, `mc`, and `direnv` for shell enhancements.
+   - Build tooling and libraries needed by `pyenv`
+     (`build-essential`, `libssl-dev`, `zlib1g-dev`, `libbz2-dev`,
+     `libreadline-dev`, `libsqlite3-dev`, `libncursesw5-dev`, `xz-utils`, `tk-dev`,
+     `libxml2-dev`, `libxmlsec1-dev`, `libffi-dev`, `liblzma-dev`).
+   - `python3-pip` for general Python package management.
+   - Docker Engine and CLI if they are not already installed.
+   - The [eza](https://eza.rocks/) modern `ls` replacement (added via the official
+     upstream apt repository if missing).
+3. **Sets up Docker** – creates the `docker` group when necessary, adds the
+   current user to that group, and enables the Docker service if `systemd`
+   controls it. The script reminds you to log out/in (or run `newgrp docker`) so
+   the new group membership takes effect.
+4. **Installs Oh My Zsh** – downloads the Oh My Zsh framework (without replacing
    your existing `~/.zshrc`), then ensures the following plugins and theme are
    available in `~/.oh-my-zsh/custom`:
    - [powerlevel10k](https://github.com/romkatv/powerlevel10k) theme
@@ -63,6 +74,7 @@ Regardless of the profile, the installer:
 5. **Changes the default shell to Zsh** – when not already the default, the
    script runs `chsh` under sudo. On WSL this step is skipped and a reminder is
    printed, because `chsh` frequently fails inside WSL without additional setup.
+
 
 When the **extended** profile is selected, the script performs additional
 bootstrap tasks:
@@ -83,7 +95,9 @@ bootstrap tasks:
   is present and set as the global interpreter, installs `nvm`, makes Node.js
   `20.11.1` the default, and installs `pnpm` when it is not already available.
 
-When all steps finish successfully, the script prints `Install complete`.
+When all steps finish successfully, the script prints `Install complete`and
+shows where the run was logged (`backup/dotfiles-install.log`).
+
 
 ### Midnight Commander theme
 
@@ -170,6 +184,7 @@ settings under version control.
    membership when using the extended profile). Restart your shell after
    installation so that pyenv, nvm, pnpm, and the new Zsh configuration are
    loaded.
+
 
 ## Uninstalling
 

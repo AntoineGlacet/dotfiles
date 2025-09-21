@@ -15,13 +15,29 @@ PROFILE="extended"
 DETECTED_OS=""
 DETECTED_VERSION=""
 
+LOG_DIR="$BACKUP"
+LOG_FILE="$LOG_DIR/dotfiles-install.log"
+
+if ! command -v tee >/dev/null 2>&1; then
+    printf 'Error: required command "tee" not found in PATH.\n' >&2
+    exit 1
+fi
+
+if ! mkdir -p "$LOG_DIR"; then
+    printf 'Error: unable to create log directory %s\n' "$LOG_DIR" >&2
+    exit 1
+fi
+
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 ########## Display Helpers
 
 COLOR_OFF='\033[0m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
 GREEN='\033[0;32m'
-msg() { printf '%b\n' "$1" >&2; }
+timestamp() { date '+%Y-%m-%d %H:%M:%S'; }
+msg() { printf '%s %b\n' "[$(timestamp)]" "$1" >&2; }
 success() { msg "${GREEN}[✔]${COLOR_OFF} $1"; }
 info() { msg "${BLUE}[ℹ]${COLOR_OFF} $1"; }
 warn() { msg "${RED}[✘]${COLOR_OFF} $1"; }
@@ -344,7 +360,7 @@ install)
     info "Installing dotfiles and tools (profile: $PROFILE)"
 
     # Check required commands
-    for cmd in git curl ln wget gpg; do
+    for cmd in git curl ln wget gpg tee; do
         need_cmd "$cmd"
     done
 
@@ -422,12 +438,13 @@ install)
     fi
 
     info "Install complete"
+    info "Install log saved to $LOG_FILE"
 
     ;;
 
 uninstall)
     info "Uninstalling dotfiles"
-    for cmd in git curl ln; do
+    for cmd in git curl ln tee; do
         need_cmd "$cmd"
     done
 
