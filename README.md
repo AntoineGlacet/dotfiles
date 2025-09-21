@@ -141,10 +141,14 @@ settings under version control.
 
 ## Installation instructions
 
-1. Clone the repository:
+> **Tip:** The installer determines its own directory at runtime, so you can
+> clone the repository anywhere (not just `~/dotfiles`) and run the script from
+> that location.
+
+1. Clone the repository (pick any directory you prefer):
    ```bash
-   git clone https://github.com/<you>/dotfiles.git ~/dotfiles
-   cd ~/dotfiles
+   git clone https://github.com/<you>/dotfiles.git /path/to/your/clone/dotfiles
+   cd /path/to/your/clone/dotfiles
    ```
 2. Make sure the installer is executable:
    ```bash
