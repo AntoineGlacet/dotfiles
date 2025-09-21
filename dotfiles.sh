@@ -84,10 +84,29 @@ unmake_link() {
 
 backup() {
     local target=$1
-    if [[ -e "$target" ]]; then
+
+    if [[ -e "$target" || -L "$target" ]]; then
         mkdir -p "$BACKUP"
-        cp -L "$target" "$BACKUP/$(date +%y%m%d_%H%M%S).$(basename "$target")"
-        rm -f "$target"
+        local timestamp dest
+        timestamp=$(date +%y%m%d_%H%M%S)
+        dest="$BACKUP/${timestamp}.$(basename "$target")"
+
+        info "Backing up $target to $dest"
+
+        if mv "$target" "$dest" 2>/dev/null; then
+            return
+        fi
+
+        if cp -a "$target" "$dest"; then
+            if [[ -d "$target" && ! -L "$target" ]]; then
+                rm -rf "$target"
+            else
+                rm -f "$target"
+            fi
+        else
+            warn "Failed to backup $target"
+            return 1
+        fi
     fi
 }
 
@@ -202,6 +221,7 @@ install | i)
     make_link "$DOTFILES/oh-my-zsh/custom/zsh-autosuggestions.zsh" "$ZSH_CUSTOM/zsh-autosuggestions.zsh"
 
     # Shell config
+    backup "$HOME/.shell"
     make_link "$DOTFILES/shell" "$HOME/.shell"
     backup "$HOME/.bashrc"
     make_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
