@@ -10,32 +10,44 @@ export LC_ALL=C.UTF-8
 # === Path ===
 export PATH="$HOME/bin:/usr/local/bin:$PATH"
 
-# === Oh My Zsh ===
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="powerlevel10k/powerlevel10k"
-
-# === Oh My Zsh Options ===
-COMPLETION_WAITING_DOTS="true"
-# CASE_SENSITIVE="true"
-# HYPHEN_INSENSITIVE="true"
-# DISABLE_AUTO_UPDATE="true"
-# ENABLE_CORRECTION="true"
-# HIST_STAMPS="yyyy-mm-dd"
-
-# === Plugins ===
-plugins=(
-  z
-  golang
-  zsh-autosuggestions
-  zsh-syntax-highlighting
-)
-
-# Safe sourcing
-if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
-  source "$ZSH/oh-my-zsh.sh"
-else
-  echo "[WARN] Oh My Zsh not found at $ZSH" >&2
+# === Zinit setup ===
+ZINIT_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/zinit"
+ZINIT_HOME="$ZINIT_ROOT/zinit.git"
+if [[ ! -f "$ZINIT_HOME/zinit.zsh" ]]; then
+  print -P "%F{33}Installing zinit...%f" >&2
+  command mkdir -p "$ZINIT_ROOT"
+  command git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME" >&2
 fi
+source "$ZINIT_HOME/zinit.zsh"
+
+# === Completion cache ===
+ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+mkdir -p "$ZSH_CACHE_DIR" "$ZSH_CACHE_DIR/completions"
+export ZSH_COMPDUMP="$ZSH_CACHE_DIR/zcompdump"
+autoload -Uz compinit
+compinit -u -d "$ZSH_COMPDUMP"
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "$ZSH_CACHE_DIR/completions"
+
+# === Shell options ===
+setopt autocd
+autoload -Uz colors && colors
+setopt interactivecomments
+setopt promptsubst
+
+# === Plugins & Theme ===
+zinit ice depth=1
+zinit light romkatv/powerlevel10k
+
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=242"
+export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+zinit light zsh-users/zsh-autosuggestions
+
+zinit ice wait"1" lucid
+zinit light zsh-users/zsh-syntax-highlighting
+
+zinit snippet OMZP::golang
+zinit snippet OMZP::z
 
 # === Language / Editor ===
 export EDITOR="nvim"
@@ -70,16 +82,6 @@ case ":$PATH:" in
 esac
 
 # === pyenv ===
-
 export PATH="$HOME/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
-
-
-# pnpm
-export PNPM_HOME="/home/antoine/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
