@@ -6,6 +6,7 @@ editor = code --wait
 sshCommand = ssh -F ~/.ssh/config
 [diff]
 tool = vscode
+renames = true
 [difftool "vscode"]
 cmd = code --wait --diff $LOCAL $REMOTE
 [merge]
