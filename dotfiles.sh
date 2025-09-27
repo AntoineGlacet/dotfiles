@@ -271,9 +271,20 @@ install_eza() {
 install_oh_my_zsh() {
     if [[ ! -d "$OH_MY_ZSH" ]]; then
         info "Installing Oh My Zsh..."
-        RUNZSH=no CHSH=no KEEP_ZSHRC=yes bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+        if RUNZSH=no CHSH=no KEEP_ZSHRC=yes bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; then
+            success "Oh My Zsh installation complete"
+        else
+            warn "Oh My Zsh installation failed"
+            return 1
+        fi
     else
-        success "Oh My Zsh already installed"
+        info "Updating Oh My Zsh..."
+        if git -C "$OH_MY_ZSH" pull --ff-only; then
+            success "Oh My Zsh update complete"
+        else
+            warn "Failed to update Oh My Zsh"
+            return 1
+        fi
     fi
 }
 
