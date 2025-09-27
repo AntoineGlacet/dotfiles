@@ -10,31 +10,45 @@ export LC_ALL=C.UTF-8
 # === Path ===
 export PATH="$HOME/bin:/usr/local/bin:$PATH"
 
-# === Oh My Zsh ===
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="powerlevel10k/powerlevel10k"
+# === Zinit bootstrap ===
+ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit"
+ZINIT_MAIN="$ZINIT_HOME/zinit.git/zinit.zsh"
+if [[ ! -f "$ZINIT_MAIN" ]]; then
+  mkdir -p "$ZINIT_HOME"
+  if command -v git >/dev/null 2>&1; then
+    git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME/zinit.git"
+  else
+    echo "[WARN] git is required to install zinit" >&2
+  fi
+fi
 
-# === Oh My Zsh Options ===
-COMPLETION_WAITING_DOTS="true"
-# CASE_SENSITIVE="true"
-# HYPHEN_INSENSITIVE="true"
-# DISABLE_AUTO_UPDATE="true"
-# ENABLE_CORRECTION="true"
-# HIST_STAMPS="yyyy-mm-dd"
+# === Completion caching ===
+ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+mkdir -p "$ZSH_CACHE_DIR/completions"
+zstyle ':completion:*' use-cache yes
+zstyle ':completion:*' cache-path "$ZSH_CACHE_DIR/completions"
+autoload -Uz compinit
 
-# === Plugins ===
-plugins=(
-  z
-  golang
-  zsh-autosuggestions
-  zsh-syntax-highlighting
-)
+# === Plugin configuration ===
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=242"
+export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
-# Safe sourcing
-if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
-  source "$ZSH/oh-my-zsh.sh"
+if [[ -f "$ZINIT_MAIN" ]]; then
+  source "$ZINIT_MAIN"
+
+  zinit snippet OMZP::golang
+  zinit snippet OMZP::z
+  zinit light romkatv/powerlevel10k
+  zinit light zsh-users/zsh-autosuggestions
+  zinit light zsh-users/zsh-syntax-highlighting
 else
-  echo "[WARN] Oh My Zsh not found at $ZSH" >&2
+  echo "[WARN] zinit not available; skipping plugin setup" >&2
+fi
+
+if [[ -f "$ZSH_CACHE_DIR/zcompdump" ]]; then
+  compinit -C -d "$ZSH_CACHE_DIR/zcompdump"
+else
+  compinit -d "$ZSH_CACHE_DIR/zcompdump"
 fi
 
 # === Language / Editor ===
@@ -70,9 +84,6 @@ case ":$PATH:" in
 esac
 
 # === pyenv ===
-
 export PATH="$HOME/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
-
-
