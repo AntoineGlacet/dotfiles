@@ -20,8 +20,7 @@ on Windows.
 .
 ├── dotfiles.sh                # Linux / WSL bootstrap entry point
 ├── dotfiles.ps1               # Windows helper for Terminal settings
-├── shell/                     # Shared shell snippets for Bash & Zsh
-├── oh-my-zsh/                 # Custom theme/plugin configuration (Powerlevel10k)
+├── shell/                     # Shared shell snippets for Bash & Zsh (Powerlevel10k profile)
 ├── git/gitconfig              # Git defaults
 ├── tmux/.tmux.conf            # tmux configuration and plugin manager setup
 ├── mc/                        # Midnight Commander preferences and Dracula skin
@@ -57,13 +56,15 @@ Regardless of the profile, the installer:
    current user to that group, and enables the Docker service if `systemd`
    controls it. The script reminds you to log out/in (or run `newgrp docker`) so
    the new group membership takes effect.
-4. **Installs Oh My Zsh** – downloads the Oh My Zsh framework (without replacing
-   your existing `~/.zshrc`), then ensures the following plugins and theme are
-   available in `~/.oh-my-zsh/custom`:
+4. **Bootstraps the Zsh runtime** – installs or updates the
+   [zinit](https://github.com/zdharma-continuum/zinit) plugin manager, enables
+   cached completions, and loads the same plugin/theme stack that previously
+   lived in Oh My Zsh:
    - [powerlevel10k](https://github.com/romkatv/powerlevel10k) theme
    - [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
    - [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
-4. **Creates symlinks to dotfiles** – backs up any existing files into
+   - Oh My Zsh `golang` and `z` plugins (loaded directly via zinit snippets)
+5. **Creates symlinks to dotfiles** – backs up any existing files into
    `backup/` (timestamped copies) before linking the repository versions:
    - Shell: `~/.shell`, `~/.bashrc`, `~/.zshrc`, and `~/.p10k.zsh`.
    - Git: `~/.gitconfig`.
@@ -71,7 +72,7 @@ Regardless of the profile, the installer:
      `~/.local/share/mc/skins/`.
    - Scripts: every file in `scripts/` is linked into `~/.local/bin/`.
    - tmux: `~/.tmux.conf` including plugin manager bootstrap.
-5. **Changes the default shell to Zsh** – when not already the default, the
+6. **Changes the default shell to Zsh** – when not already the default, the
    script runs `chsh` under sudo. On WSL this step is skipped and a reminder is
    printed, because `chsh` frequently fails inside WSL without additional setup.
 
@@ -211,13 +212,15 @@ Backups of files that were replaced during installation remain in the
   branch.
 - Add more scripts: place executable files in `scripts/` and they will be linked
   into `~/.local/bin` on the next run.
-- Oh My Zsh plugins: add new repositories to the `fetch_repo` calls near the end
-  of the installer.
+- Zsh plugins: edit the `zinit` section in `shell/zshrc` to add or remove
+  plugins and snippets.
+- Prompt styling: adjust `shell/p10k.zsh` (linked to `~/.p10k.zsh`) or run
+  `p10k configure` from within Zsh to regenerate the theme profile.
 
 ## Troubleshooting tips
 
-- If Oh My Zsh reports missing plugins after installation, re-run the installer;
-  it pulls the repositories with `git clone --depth=1` and `git pull --ff-only`.
+- If zinit reports issues updating plugins, re-run the installer or execute
+  `zinit self-update && zinit update` from within Zsh.
 - Docker commands failing with `permission denied` usually mean the new group
   membership has not been applied yet. Log out/in or run `newgrp docker`.
 - When running under WSL without systemd, enabling the Docker service will fail;

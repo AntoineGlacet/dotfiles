@@ -1,2 +1,0 @@
-export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=242"
-export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
