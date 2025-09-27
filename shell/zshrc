@@ -16,9 +16,20 @@ ZINIT_HOME="$ZINIT_ROOT/zinit.git"
 if [[ ! -f "$ZINIT_HOME/zinit.zsh" ]]; then
   print -P "%F{33}Installing zinit...%f" >&2
   command mkdir -p "$ZINIT_ROOT"
-  command git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME" >&2
+  if command -v git >/dev/null 2>&1; then
+    if ! command git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME" >&2; then
+      print -P "%F{196}Unable to clone zinit – falling back to a basic prompt.%f" >&2
+    fi
+  else
+    print -P "%F{196}git is unavailable – skipping automatic zinit installation.%f" >&2
+  fi
 fi
-source "$ZINIT_HOME/zinit.zsh"
+
+if [[ -f "$ZINIT_HOME/zinit.zsh" ]]; then
+  source "$ZINIT_HOME/zinit.zsh"
+else
+  print -P "%F{196}zinit not found at $ZINIT_HOME – plugins will be skipped.%f" >&2
+fi
 
 # === Completion cache ===
 ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
@@ -36,18 +47,23 @@ setopt interactivecomments
 setopt promptsubst
 
 # === Plugins & Theme ===
-zinit ice depth=1
-zinit light romkatv/powerlevel10k
-
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=242"
 export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-zinit light zsh-users/zsh-autosuggestions
 
-zinit ice wait"1" lucid
-zinit light zsh-users/zsh-syntax-highlighting
+if typeset -f zinit >/dev/null 2>&1; then
+  zinit ice depth=1
+  zinit light romkatv/powerlevel10k
 
-zinit snippet OMZP::golang
-zinit snippet OMZP::z
+  zinit light zsh-users/zsh-autosuggestions
+
+  zinit ice wait"1" lucid
+  zinit light zsh-users/zsh-syntax-highlighting
+
+  zinit snippet OMZP::golang
+  zinit snippet OMZP::z
+else
+  PROMPT="%F{cyan}%n@%m%f %1~ %# "
+fi
 
 # === Language / Editor ===
 export EDITOR="nvim"

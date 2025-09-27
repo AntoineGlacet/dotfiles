@@ -195,6 +195,39 @@ get_os() {
     printf '%s\n%s\n' "$OS" "$VER"
 }
 
+fetch_repo() {
+    local repo=$1
+    local dir=$2
+    shift 2 || true
+    local -a clone_args=()
+    if [[ $# -gt 0 ]]; then
+        clone_args=("$@")
+    fi
+
+    if [[ -d "$dir/.git" ]]; then
+        info "Updating $dir"
+        if ! git -C "$dir" pull --ff-only; then
+            warn "Unable to update $dir – continuing with existing checkout"
+            return 1
+        fi
+        return 0
+    fi
+
+    if [[ -d "$dir" && ! -d "$dir/.git" ]]; then
+        warn "$dir exists but is not a git repository – skipping clone"
+        return 1
+    fi
+
+    info "Cloning $repo"
+    mkdir -p "$(dirname "$dir")"
+    if git clone "${clone_args[@]}" "$repo" "$dir"; then
+        return 0
+    fi
+
+    warn "Unable to clone $repo into $dir"
+    return 1
+}
+
 make_link() {
     local target=$1
     local linkname=$2
@@ -259,16 +292,17 @@ install_eza() {
 }
 
 install_zinit() {
-    if [[ ! -f "$ZINIT_HOME/zinit.zsh" ]]; then
-        info "Installing zinit..."
-        mkdir -p "$ZINIT_ROOT"
-        git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+    mkdir -p "$ZINIT_ROOT"
+
+    if fetch_repo https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"; then
+        success "zinit ready"
+        return
+    fi
+
+    if [[ -f "$ZINIT_HOME/zinit.zsh" ]]; then
+        warn "Proceeding with existing zinit checkout"
     else
-        success "zinit already installed"
-        info "Updating zinit..."
-        if ! git -C "$ZINIT_HOME" pull --ff-only; then
-            warn "Unable to update zinit – continuing with the existing clone"
-        fi
+        error "Failed to install zinit – see $LOG_FILE for details"
     fi
 }
 
