@@ -8,7 +8,8 @@
 
 DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP="$DOTFILES/backup"
-OH_MY_ZSH="$HOME/.oh-my-zsh"
+ZINIT_HOME="${XDG_DATA_HOME:-$HOME/.local/share}/zinit"
+ZINIT_DIR="$ZINIT_HOME/zinit.git"
 PYTHON_VERSION="3.12.2"
 NODE_VERSION="20.11.1"
 PROFILE="extended"
@@ -268,21 +269,21 @@ install_eza() {
     sudo apt install -y eza
 }
 
-install_oh_my_zsh() {
-    if [[ ! -d "$OH_MY_ZSH" ]]; then
-        info "Installing Oh My Zsh..."
-        if RUNZSH=no CHSH=no KEEP_ZSHRC=yes bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; then
-            success "Oh My Zsh installation complete"
+install_or_update_zinit() {
+    if [[ ! -d "$ZINIT_DIR" ]]; then
+        info "Installing zinit..."
+        if mkdir -p "$ZINIT_HOME" && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_DIR"; then
+            success "zinit installation complete"
         else
-            warn "Oh My Zsh installation failed"
+            warn "zinit installation failed"
             return 1
         fi
     else
-        info "Updating Oh My Zsh..."
-        if git -C "$OH_MY_ZSH" pull --ff-only; then
-            success "Oh My Zsh update complete"
+        info "Updating zinit..."
+        if git -C "$ZINIT_DIR" pull --ff-only; then
+            success "zinit update complete"
         else
-            warn "Failed to update Oh My Zsh"
+            warn "Failed to update zinit"
             return 1
         fi
     fi
@@ -530,15 +531,7 @@ install)
         install_ubuntu_packages
     fi
 
-    install_oh_my_zsh
-
-    # Plugins
-    ZSH_CUSTOM=${ZSH_CUSTOM:-$OH_MY_ZSH/custom}
-    fetch_repo https://github.com/romkatv/powerlevel10k.git "$ZSH_CUSTOM/themes/powerlevel10k"
-    fetch_repo https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
-    fetch_repo https://github.com/zsh-users/zsh-autosuggestions "$ZSH_CUSTOM/plugins/zsh-autosuggestions"
-
-    make_link "$DOTFILES/oh-my-zsh/custom/zsh-autosuggestions.zsh" "$ZSH_CUSTOM/zsh-autosuggestions.zsh"
+    install_or_update_zinit
 
     # Shell config
     backup "$HOME/.shell"
@@ -548,7 +541,7 @@ install)
     backup "$HOME/.zshrc"
     make_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
     backup "$HOME/.p10k.zsh"
-    make_link "$DOTFILES/oh-my-zsh/.p10k.zsh" "$HOME/.p10k.zsh"
+    make_link "$DOTFILES/shell/p10k.zsh" "$HOME/.p10k.zsh"
 
     # Git config
     backup "$HOME/.gitconfig"
@@ -610,6 +603,7 @@ uninstall)
     unmake_link "$DOTFILES/shell" "$HOME/.shell"
     unmake_link "$DOTFILES/shell/bashrc" "$HOME/.bashrc"
     unmake_link "$DOTFILES/shell/zshrc" "$HOME/.zshrc"
+    unmake_link "$DOTFILES/shell/p10k.zsh" "$HOME/.p10k.zsh"
 
     # Reset shell to bash if needed
     if [[ "$SHELL" != "$(command -v bash)" ]]; then
