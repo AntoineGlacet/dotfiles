@@ -290,7 +290,7 @@ install_or_update_zinit() {
 }
 
 install_ubuntu_packages() {
-    local packages=(zsh mc)
+    local packages=(zsh mc fzf fd-find ripgrep bat)
 
     if [[ "$PROFILE" == "extended" ]]; then
         packages+=(python3-pip build-essential libssl-dev zlib1g-dev libbz2-dev \
