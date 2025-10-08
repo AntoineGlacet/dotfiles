@@ -10,3 +10,20 @@ if [ -t 0 ]; then
 #    if [ `tput colors` -ge 8 ]; then
 #    fi
 fi
+
+FZF_EXAMPLE_DIR="/usr/share/doc/fzf/examples"
+
+if command -v fzf >/dev/null 2>&1; then
+    if [ -n "${BASH_VERSION:-}" ] && [ -r "$FZF_EXAMPLE_DIR/key-bindings.bash" ]; then
+        # shellcheck disable=SC1090
+        . "$FZF_EXAMPLE_DIR/key-bindings.bash"
+    elif [ -n "${ZSH_VERSION:-}" ] && [ -r "$FZF_EXAMPLE_DIR/key-bindings.zsh" ]; then
+        # shellcheck disable=SC1090
+        . "$FZF_EXAMPLE_DIR/key-bindings.zsh"
+    fi
+
+    if command -v bat >/dev/null 2>&1; then
+        export FZF_CTRL_T_OPTS="--preview 'bat --style=numbers --color=always --line-range :500 {}' --preview-window=right:60%:wrap"
+        export FZF_CTRL_R_OPTS="--preview \"printf '%s\\n' {} | bat --paging=never --style=plain --language=bash -\" --preview-window=down:60%:wrap"
+    fi
+fi
