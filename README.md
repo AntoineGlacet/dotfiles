@@ -63,7 +63,10 @@ Regardless of the profile, the installer:
    - [powerlevel10k](https://github.com/romkatv/powerlevel10k) theme
    - [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting)
    - [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions)
+   - [zsh-history-substring-search](https://github.com/zsh-users/zsh-history-substring-search)
    - Oh My Zsh `golang` and `z` plugins (loaded directly via zinit snippets)
+   The Up/Down arrows are bound in both Bash and Zsh to cycle through matching
+   history entries provided by the substring search plugin.
 5. **Creates symlinks to dotfiles** – backs up any existing files into
    `backup/` (timestamped copies) before linking the repository versions:
    - Shell: `~/.shell`, `~/.bashrc`, `~/.zshrc`, and `~/.p10k.zsh`.
