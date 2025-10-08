@@ -123,6 +123,17 @@ The script temporarily changes ownership of the target file, opens it in VS Code
 with `code --wait`, and restores the original ownership when VS Code exits. It is
 handy for editing system files without running the editor as root.
 
+### Modern `ls` defaults
+
+Interactive shells alias `ls` to
+[`eza`](https://github.com/eza-community/eza) with icons, Git status, and
+directories grouped first so that the enhanced view becomes the default. Helper
+aliases such as `ll`, `la`, `lt`, and `lg` expose common combinations (long
+listing, hidden files, tree view, and Git-aware listings respectively). If you
+prefer a pure ASCII listing, run the aliases with `--no-icons` (for example,
+`ls --no-icons`) or adjust the alias in `shell/aliases` to drop the `--icons`
+flag.
+
 ## Ubuntu- and WSL-specific behaviour
 
 - **Package manager** – all package installation uses `apt`. On WSL ensure the
