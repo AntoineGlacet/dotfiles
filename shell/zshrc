@@ -22,6 +22,12 @@ if [[ ! -f "$ZINIT_MAIN" ]]; then
   fi
 fi
 
+# === History ===
+export HISTFILE="$HOME/.zsh_history"
+export HISTSIZE=50000
+export SAVEHIST=50000
+setopt SHARE_HISTORY INC_APPEND_HISTORY EXTENDED_HISTORY HIST_IGNORE_ALL_DUPS HIST_IGNORE_SPACE
+
 # === Completion caching ===
 ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
 mkdir -p "$ZSH_CACHE_DIR/completions"
