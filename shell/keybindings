@@ -1,7 +1,29 @@
+# Shared keybindings for interactive shells
 
-# bindkey -e
-# Control + backspace
-bindkey '^H' backward-kill-word
-# Control + arrows
-bindkey ";5C" forward-word
-bindkey ";5D" backward-word
+if [ -n "${ZSH_VERSION:-}" ]; then
+  bindkey '^H' backward-kill-word
+  bindkey "\e[1;5C" forward-word
+  bindkey "\e[1;5D" backward-word
+
+  if (( $+functions[history-substring-search-up] )); then
+    if [[ -n ${terminfo[kcuu1]} ]]; then
+      bindkey "${terminfo[kcuu1]}" history-substring-search-up
+    else
+      bindkey '^[[A' history-substring-search-up
+    fi
+  fi
+
+  if (( $+functions[history-substring-search-down] )); then
+    if [[ -n ${terminfo[kcud1]} ]]; then
+      bindkey "${terminfo[kcud1]}" history-substring-search-down
+    else
+      bindkey '^[[B' history-substring-search-down
+    fi
+  fi
+elif [ -n "${BASH_VERSION:-}" ]; then
+  bind '"\C-H": backward-kill-word'
+  bind '"\e[1;5C": forward-word'
+  bind '"\e[1;5D": backward-word'
+  bind '"\e[A": history-search-backward'
+  bind '"\e[B": history-search-forward'
+fi
