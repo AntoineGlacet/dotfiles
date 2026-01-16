@@ -1,0 +1,48 @@
+# ========================================
+# SSH Configuration Template
+# ========================================
+#
+# This is a template file. Your actual SSH config with personal servers
+# should be kept in ~/.ssh/config and NOT committed to git.
+#
+# SETUP INSTRUCTIONS:
+# The dotfiles installer can optionally symlink this file to ~/.ssh/config
+# However, it's recommended to keep your actual config local only.
+#
+
+# === Example Server Configuration ===
+# Uncomment and customize for your servers
+#
+# Host example-server
+#     HostName 1.2.3.4
+#     User your-username
+#     IdentityFile ~/.ssh/id_rsa
+#     IdentitiesOnly yes
+#
+# Host github.com
+#     HostName github.com
+#     User git
+#     IdentityFile ~/.ssh/id_rsa
+#     IdentitiesOnly yes
+
+# === Common SSH Settings for All Hosts ===
+Host *
+    # Keep connection alive
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    
+    # Compression for slow connections
+    Compression yes
+    
+    # Reuse existing connections
+    ControlMaster auto
+    ControlPath ~/.ssh/control-%r@%h:%p
+    ControlPersist 10m
+    
+    # Security settings
+    HashKnownHosts yes
+    
+    # Disable strict host key checking for local network (adjust as needed)
+    # Host 192.168.* 10.*
+    #     StrictHostKeyChecking no
+    #     UserKnownHostsFile /dev/null

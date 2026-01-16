@@ -1,6 +1,17 @@
 # === sudo ===
 alias sudo='sudo '  # enables aliases with sudo
 
+# === Modern tools (Ubuntu compatibility) ===
+# bat (installed as batcat on Ubuntu)
+if command -v batcat >/dev/null 2>&1 && ! command -v bat >/dev/null 2>&1; then
+    alias bat='batcat'
+fi
+
+# fd (installed as fdfind on Ubuntu)
+if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; then
+    alias fd='fdfind'
+fi
+
 # === eza (modern ls) ===
 alias ls='eza --icons --group-directories-first'
 alias ll='eza --icons --group-directories-first --git -lh'
@@ -79,3 +90,45 @@ alias dc='docker compose'
 
 # === print lines from file ===
 lines() { sed -n "$1"p "$2"; }
+
+# === bat (better cat) ===
+if command -v bat >/dev/null 2>&1 || command -v batcat >/dev/null 2>&1; then
+    alias cat='bat --paging=never --style=plain'
+    alias catt='bat --paging=always'  # cat with paging
+    alias catp='bat --style=full'     # cat with line numbers and git info
+fi
+
+# === fd (better find) ===
+if command -v fd >/dev/null 2>&1 || command -v fdfind >/dev/null 2>&1; then
+    alias fda='fd --hidden --no-ignore'  # find all including hidden
+    alias fde='fd --extension'            # find by extension: fde py
+fi
+
+# === ripgrep (better grep) ===
+if command -v rg >/dev/null 2>&1; then
+    alias rga='rg --hidden --no-ignore'  # search all files
+    alias rgf='rg --files-with-matches'  # just show filenames
+    alias rgl='rg --line-number'         # show line numbers (default, but explicit)
+fi
+
+# === fzf-powered helpers ===
+if command -v fzf >/dev/null 2>&1; then
+    # Interactive git branch checkout
+    alias gb='git branch --all | fzf | xargs git checkout'
+    
+    # Interactive git log browser
+    alias gll='git log --oneline --color=always | fzf --ansi --preview "echo {} | cut -d\" \" -f1 | xargs git show --color=always" | cut -d" " -f1 | xargs git show'
+    
+    # Interactive process kill
+    alias fkill='ps aux | fzf | awk "{print \$2}" | xargs kill -9'
+    
+    # Interactive directory jump (requires fd)
+    if command -v fd >/dev/null 2>&1 || command -v fdfind >/dev/null 2>&1; then
+        alias fcd='cd $(fd --type d | fzf)'
+    fi
+fi
+
+# === Proxy shortcuts ===
+alias pon='enable_proxy'
+alias poff='disable_proxy'
+alias ps='proxy_status'

@@ -20,10 +20,18 @@ on Windows.
 .
 ├── dotfiles.sh                # Linux / WSL bootstrap entry point
 ├── dotfiles.ps1               # Windows helper for Terminal settings
-├── shell/                     # Shared shell snippets for Bash & Zsh (Powerlevel10k profile)
+├── agents.md                  # Guidelines for AI coding assistants
+├── shell/                     # Shared shell snippets for Bash & Zsh
+│   ├── env.local.template    # Template for personal settings (copy to env.local)
+│   ├── bashrc, zshrc         # Shell entry points
+│   ├── p10k.zsh              # Powerlevel10k theme configuration
+│   └── aliases, env, etc.    # Modular configuration components
 ├── git/gitconfig              # Git defaults
 ├── tmux/.tmux.conf            # tmux configuration and plugin manager setup
 ├── mc/                        # Midnight Commander preferences and Dracula skin
+├── opencode/                  # OpenCode AI assistant configuration
+├── htop/                      # htop system monitor configuration
+├── ssh/                       # SSH config template (personal config goes in ~/.ssh/)
 ├── scripts/                   # Utility scripts available via ~/.local/bin
 ├── windows/                   # Windows Terminal profile JSON, optional extras
 └── backup/                    # Created on demand; previous dotfiles are copied here
@@ -157,6 +165,102 @@ flag.
   download it from [Nerd Fonts](https://www.nerdfonts.com/font-downloads), then
   select it in Windows Terminal. On Linux you can copy the `.ttf` files to
   `~/.local/share/fonts/` and run `fc-cache -f`.
+
+## Security Best Practices
+
+### Managing Secrets
+
+This repository uses a template-based approach for sensitive data to prevent accidental commits of tokens and personal information.
+
+1. **Copy the template** during first installation:
+   ```bash
+   cp shell/env.local.template shell/env.local
+   ```
+   
+   The installer does this automatically and warns you to edit the file.
+
+2. **Edit `shell/env.local`** with your actual values:
+   - API tokens (OPENMETADATA_MCP_TOKEN, etc.)
+   - Personal information (NAME, EMAIL)
+   - Project-specific paths (DBT_PROFILES_DIR, GCP_PROJECT)
+   - Proxy settings if in corporate environment
+
+3. **Never commit `env.local`** - it's in `.gitignore` and will never be tracked
+
+### For AI Coding Assistants
+
+If you use AI coding assistants (OpenCode, Cursor, GitHub Copilot, Claude, etc.), please read [`agents.md`](agents.md) first. It contains important guidelines about:
+
+- How to contribute to this repository
+- Security practices for handling dotfiles
+- Testing procedures and quality standards
+- Coding standards and patterns to follow
+
+## Tool Integration Reference
+
+### Modern CLI Tools
+
+These tools are installed automatically but require aliases on Ubuntu due to naming conflicts:
+
+| Tool | Ubuntu Package | Ubuntu Command | Alias | Description |
+|------|----------------|----------------|-------|-------------|
+| bat | `bat` | `batcat` | `bat` | Cat with syntax highlighting |
+| fd | `fd-find` | `fdfind` | `fd` | Fast find alternative |
+| ripgrep | `ripgrep` | `rg` | - | Fast recursive grep |
+| eza | `eza` | `eza` | `ls`, `ll`, `la`, etc. | Modern ls with icons and git |
+| fzf | `fzf` | `fzf` | - | Fuzzy finder (Ctrl+R, Ctrl+T) |
+
+### Enhanced Aliases
+
+See [`shell/aliases`](shell/aliases) for the complete list. Key highlights:
+
+```bash
+# Modern tool enhancements
+bat        # Syntax-highlighted cat (replaces plain cat)
+fd         # Fast find
+rg         # Ripgrep for code search
+
+# Enhanced ls (via eza with icons and git integration)
+ll         # Long listing with git status
+la         # Show hidden files
+lt         # Tree view (depth 2)
+lg         # Git-aware listing
+ex         # Full detailed view
+
+# fzf-powered interactive commands
+gb         # Interactive git branch checkout
+gll        # Interactive git log browser with preview
+fcd        # Interactive directory jump
+fkill      # Interactive process kill
+
+# Proxy management (for corporate environments)
+pon        # Enable all proxies (HTTP, Git, SSH)
+poff       # Disable all proxies
+ps         # Show detailed proxy status
+```
+
+### Proxy Functions (Corporate Environments)
+
+If you work behind a corporate proxy, the built-in proxy functions can help manage environment variables, Git configuration, and SSH ProxyCommand settings:
+
+```bash
+enable_proxy    # Enable HTTP, HTTPS, Git, and SSH proxies
+disable_proxy   # Disable all proxy settings
+proxy_status    # Show current proxy configuration with visual indicators
+```
+
+**Configuration**: Set your proxy details in `shell/env.local`:
+
+```bash
+export KAP_PROXY_HOST="your-proxy-host"
+export KAP_PROXY_PORT="8080"
+export KAP_SOCKS_PORT="1080"
+```
+
+The functions automatically configure:
+- Environment variables: `http_proxy`, `https_proxy`, `no_proxy`, etc.
+- Git: `http.proxy` and `https.proxy` (global config)
+- SSH: `ProxyCommand` with automatic bypass for local networks
 
 ## Windows companion setup
 

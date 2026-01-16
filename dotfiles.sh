@@ -569,6 +569,31 @@ install)
     backup "$HOME/.tmux.conf"
     make_link "$DOTFILES/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
+    # OpenCode
+    mkdir -p "$HOME/.config/opencode"
+    backup "$HOME/.config/opencode/opencode.json"
+    make_link "$DOTFILES/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+    backup "$HOME/.config/opencode/package.json"
+    make_link "$DOTFILES/opencode/package.json" "$HOME/.config/opencode/package.json"
+    success "OpenCode configuration linked"
+
+    # htop
+    mkdir -p "$HOME/.config/htop"
+    backup "$HOME/.config/htop/htoprc"
+    make_link "$DOTFILES/htop/htoprc" "$HOME/.config/htop/htoprc"
+    success "htop configuration linked"
+
+    # Create env.local if it doesn't exist
+    if [[ ! -f "$HOME/.shell/env.local" ]]; then
+        if [[ -f "$DOTFILES/shell/env.local.template" ]]; then
+            info "Creating env.local from template"
+            cp "$DOTFILES/shell/env.local.template" "$HOME/.shell/env.local"
+            warn "⚠️  Please edit ~/.shell/env.local with your personal settings and secrets"
+        fi
+    else
+        success "env.local already exists"
+    fi
+
     if [[ "$PROFILE" == "extended" ]]; then
         install_extended_tooling
     else

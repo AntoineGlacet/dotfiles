@@ -1,2 +1,22 @@
+# Backup directory (created during installation)
 backup/**
 !/backup/.gitkeep
+
+# Local environment (contains secrets)
+shell/env.local
+
+# OpenCode local config (may contain tokens)
+opencode/.env
+
+# Backup files
+**/*.bak
+**/*.save
+**/*.old
+
+# SSH known hosts (machine-specific)
+ssh/known_hosts*
+
+# Temporary files
+**/*~
+**/*.swp
+**/*.swo

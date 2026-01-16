@@ -11,10 +11,6 @@ pathremove "" PATH
 
 pathprepend "$HOME/.local/bin" PATH
 
-# Personal information
-export NAME="Your Name"
-export EMAIL="your.email@example.com"
-
 # Ruby
 # Install Ruby Gems to ~/gems
 export GEM_HOME="$HOME/gems"
@@ -26,6 +22,9 @@ pathprepend "/usr/local/go/bin" PATH
 # snap
 pathprepend "/snap/bin" PATH
 
-# dbt
-export DBT_PROFILES_DIR=/home/yourusername/projects/your-project/dbt/profiles
-export GCP_PROJECT=your-gcp-project-id
+# OpenCode CLI
+pathprepend "$HOME/.opencode/bin" PATH
+
+# Load local environment (personal settings, secrets)
+# This file is not tracked in git - see shell/env.local.template
+[[ -f ~/.shell/env.local ]] && . ~/.shell/env.local

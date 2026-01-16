@@ -67,10 +67,10 @@ tmuxls() {
 
 ## KAP proxy functions
 
-# Define proxy settings
-proxy_host="192.168.3.16"
-proxy_port="8080"
-socks_proxy_port="1080"
+# Define proxy settings (can be overridden in env.local)
+proxy_host="${KAP_PROXY_HOST:-192.168.3.16}"
+proxy_port="${KAP_PROXY_PORT:-8080}"
+socks_proxy_port="${KAP_SOCKS_PORT:-1080}"
 ssh_config="$HOME/.ssh/config"
 
 # Function to set environment variables and Git proxy
@@ -78,7 +78,7 @@ set_proxy_env() {
 	export http_proxy="http://$proxy_host:$proxy_port"
 	export https_proxy="http://$proxy_host:$proxy_port"
 	export ftp_proxy="http://$proxy_host:$proxy_port"
-	export no_proxy="localhost,127.0.0.1,.mycompany.com"
+	export no_proxy="localhost,127.0.0.1,::1,.local,.mycompany.com,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12"
 	export ALL_PROXY="socks5://$proxy_host:$socks_proxy_port"
 
 	# Uppercase variants for compatibility
@@ -157,19 +157,38 @@ disable_proxy() {
 
 # Function to check proxy status
 proxy_status() {
-	echo "=== Environment Proxy Variables ==="
-	env | grep -i proxy || echo "No proxy environment variables set."
-
-	# Detect mismatch
-	[[ "$http_proxy" != "$HTTP_PROXY" ]] && echo "⚠️  Mismatch: http_proxy='$http_proxy' vs HTTP_PROXY='$HTTP_PROXY'"
-	[[ "$https_proxy" != "$HTTPS_PROXY" ]] && echo "⚠️  Mismatch: https_proxy='$https_proxy' vs HTTPS_PROXY='$HTTPS_PROXY'"
-
+	echo "╔══════════════════════════════════════╗"
+	echo "║       PROXY STATUS CHECK             ║"
+	echo "╚══════════════════════════════════════╝"
+	
+	if [[ -n "${http_proxy:-}" ]]; then
+		echo "✅ Environment Proxy: ENABLED"
+		echo "   http_proxy:  $http_proxy"
+		echo "   https_proxy: $https_proxy"
+		echo "   no_proxy:    $no_proxy"
+		
+		# Detect mismatch
+		[[ "$http_proxy" != "$HTTP_PROXY" ]] && echo "   ⚠️  Mismatch: http_proxy vs HTTP_PROXY"
+		[[ "$https_proxy" != "$HTTPS_PROXY" ]] && echo "   ⚠️  Mismatch: https_proxy vs HTTPS_PROXY"
+	else
+		echo "❌ Environment Proxy: DISABLED"
+	fi
+	
 	echo ""
-	echo "=== Git Proxy Configuration ==="
-	echo "http.proxy: $(git config --global --get http.proxy || echo unset)"
-	echo "https.proxy: $(git config --global --get https.proxy || echo unset)"
-
+	local git_http=$(git config --global --get http.proxy 2>/dev/null)
+	if [[ -n "$git_http" ]]; then
+		echo "✅ Git Proxy: ENABLED"
+		echo "   http:  $git_http"
+		echo "   https: $(git config --global --get https.proxy 2>/dev/null)"
+	else
+		echo "❌ Git Proxy: DISABLED"
+	fi
+	
 	echo ""
-	echo "=== SSH Proxy Configuration Snippet ==="
-	grep -A3 "ProxyCommand nc -X connect -x" "$ssh_config" || echo "No SSH proxy configuration found."
+	if grep -q "ProxyCommand nc -X connect" "$ssh_config" 2>/dev/null; then
+		echo "✅ SSH Proxy: ENABLED"
+		grep -A1 "ProxyCommand nc -X connect" "$ssh_config" | head -2
+	else
+		echo "❌ SSH Proxy: DISABLED"
+	fi
 }

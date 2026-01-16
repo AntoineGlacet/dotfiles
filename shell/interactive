@@ -22,8 +22,16 @@ if command -v fzf >/dev/null 2>&1; then
         . "$FZF_EXAMPLE_DIR/key-bindings.zsh"
     fi
 
-    if command -v bat >/dev/null 2>&1; then
-        export FZF_CTRL_T_OPTS="--preview 'bat --style=numbers --color=always --line-range :500 {}' --preview-window=right:60%:wrap"
-        export FZF_CTRL_R_OPTS="--preview \"printf '%s\\n' {} | bat --paging=never --style=plain --language=bash -\" --preview-window=down:60%:wrap"
+    # Determine the correct bat command (Ubuntu uses batcat)
+    BAT_CMD=""
+    if command -v batcat >/dev/null 2>&1; then
+        BAT_CMD="batcat"
+    elif command -v bat >/dev/null 2>&1; then
+        BAT_CMD="bat"
+    fi
+
+    if [ -n "$BAT_CMD" ]; then
+        export FZF_CTRL_T_OPTS="--preview '$BAT_CMD --style=numbers --color=always --line-range :500 {}' --preview-window=right:60%:wrap"
+        export FZF_CTRL_R_OPTS="--preview \"printf '%s\\n' {} | $BAT_CMD --paging=never --style=plain --language=bash -\" --preview-window=down:60%:wrap"
     fi
 fi
